@@ -71,10 +71,10 @@ Commit and push. GitHub Actions runs the tests and publishes the site.
 
 ## Step 7: Print the menu QR
 
-Open **Settings → Menu QR → Open printable table card** (or `/pourology/qr.html`) and print it at A6. Customers scan it and the menu opens.
+Open **Settings → Menu QR**. **Download card (PNG)** gives the full branded A6 card, ready to print or send to a printer. **Download QR with logo (PNG)** gives just the code for posters and Instagram. You can also print **Open printable table card** directly. Customers scan it and the menu opens.
 
 - The QR points to `https://vivek-kubavat.github.io/pourology/menu.html`. It never needs reprinting when prices change, because prices come live from the Sheet.
-- If the URL changes (e.g. a custom domain), run `npm run qr -- https://your-domain/menu.html`, then commit and push.
+- If the URL changes (e.g. a custom domain), run `npm run qr -- https://your-domain/menu.html` (needs Google Chrome installed to render the PNGs), then commit and push.
 
 ---
 

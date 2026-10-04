@@ -25,6 +25,11 @@
     .card-qr img.qr { width: 62mm; height: 62mm; }
     .card-qr .how { font-size: 3mm; margin: 3mm 0 0; color: #6b5442; }
     .card-qr .city { margin-top: auto; font-size: 2.4mm; letter-spacing: .3em; color: var(--teal-deep); }
+    /* Export mode (qr.html#export): used by scripts/make-qr.js to render the downloadable PNG card. */
+    body:has(#export:target) { background: var(--cream); }
+    body:has(#export:target) .tools { display: none; }
+    body:has(#export:target) .wrap { padding: 0; }
+    body:has(#export:target) .card-qr { zoom: 2; width: 105mm; height: 148mm; border-radius: 0; box-shadow: none; } /* 2× so the window is ≥ 500px wide */
     @page { size: A6; margin: 0; }
     @media print {
       body { background: none; }
@@ -36,11 +41,13 @@
   </style>
 </head>
 <body>
+  <span id="export" hidden></span>
   <div class="wrap">
     <div class="tools">
       <p>Print this card (A6, or several per A4) and place it on the counter and tables. Customers scan it to open the menu.</p>
-      <a class="btn" href="qr/menu-qr.png" download="pourology-menu-qr.png">Download QR (PNG)</a>
-      <a class="btn ghost" href="qr/menu-qr.svg" download="pourology-menu-qr.svg">Download QR (SVG)</a>
+      <a class="btn" href="qr/menu-card.png" download="pourology-menu-card.png">Download card (PNG)</a>
+      <a class="btn ghost" href="qr/menu-qr-logo.png" download="pourology-menu-qr.png">Download QR with logo (PNG)</a>
+      <a class="btn ghost" href="qr/menu-qr.svg" download="pourology-menu-qr.svg">QR (SVG)</a>
       <a class="btn ghost" href="menu.html">Open menu</a>
     </div>
 

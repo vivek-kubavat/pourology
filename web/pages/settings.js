@@ -126,7 +126,8 @@ async function qr(root) {
         <img src="qr/menu-qr.svg" alt="Menu QR code" width="220" height="220" style="border-radius:12px;background:var(--cream)">
         <div style="display:grid;gap:8px;min-width:220px;flex:1">
           <a class="btn" href="qr.html" target="_blank" rel="noopener">Open printable table card</a>
-          <a class="btn ghost" href="qr/menu-qr.png" download="pourology-menu-qr.png">Download PNG (print)</a>
+          <a class="btn ghost" href="qr/menu-card.png" download="pourology-menu-card.png">Download card (PNG)</a>
+          <a class="btn ghost" href="qr/menu-qr-logo.png" download="pourology-menu-qr.png">Download QR with logo (PNG)</a>
           <a class="btn ghost" href="menu.html" target="_blank" rel="noopener">Preview menu</a>
           <p class="small muted">Menu link: <a href="menu.html" target="_blank" rel="noopener">${esc(url)}</a></p>
           <p class="small muted">The QR always points to the menu page, so it never needs reprinting when prices change. Edit items in Settings → Menu & recipes.</p>

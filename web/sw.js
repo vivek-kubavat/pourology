@@ -1,11 +1,11 @@
 // App-shell cache so the PWA opens instantly and installs. API calls always go to the network:
 // financial data is never cached on the device.
-const VERSION = 'pourology-v4';
+const VERSION = 'pourology-v5';
 const SHELL = [
   './', './index.html', './menu.html', './styles.css', './app.js', './api.js', './ui.js', './config.js',
   './pages/shared.js', './pages/home.js', './pages/sale.js', './pages/earnings.js', './pages/withdrawals.js',
   './pages/report.js', './pages/sales.js', './pages/purchases.js', './pages/inventory.js', './pages/expenses.js',
-  './pages/settings.js', './pages/audit.js', './manifest.webmanifest', './icons/logo-tile.png', './icons/favicon-64.png', './icons/icon-192.png', './icons/icon-512.png', './icons/maskable-512.png', './qr.html', './menu.js', './vendor/chart.umd.min.js', './qr/menu-qr.svg', './qr/menu-qr.png',
+  './pages/settings.js', './pages/audit.js', './manifest.webmanifest', './icons/logo-tile.png', './icons/favicon-64.png', './icons/icon-192.png', './icons/icon-512.png', './icons/maskable-512.png', './qr.html', './menu.js', './vendor/chart.umd.min.js', './qr/menu-qr.svg', './qr/menu-qr-logo.png', './qr/menu-card.png',
 ];
 
 self.addEventListener('install', (e) => {
