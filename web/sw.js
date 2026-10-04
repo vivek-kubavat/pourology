@@ -1,6 +1,6 @@
 // App-shell cache so the PWA opens instantly and installs. API calls always go to the network:
 // financial data is never cached on the device.
-const VERSION = 'pourology-v6';
+const VERSION = 'pourology-v7';
 const SHELL = [
   './', './index.html', './menu.html', './styles.css', './app.js', './api.js', './ui.js', './config.js',
   './pages/shared.js', './pages/home.js', './pages/sale.js', './pages/earnings.js', './pages/withdrawals.js',

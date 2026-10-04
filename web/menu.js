@@ -160,8 +160,14 @@ function flash(sel, text) {
 }
 
 // ---------- Add to Home Screen ----------
-// Always offered (unless already installed). Chrome/Edge on Android use the native install prompt when the
-// browser provides one; otherwise (iPhone Safari, in-app browsers…) we show the 2-step instructions.
+// Suggested twice: a compact banner at the top (dismissible for 7 days) and a box at the bottom.
+// Chrome/Edge on Android use the native install prompt when available; otherwise (iPhone Safari,
+// in-app browsers…) tapping the button shows the 2-step instructions.
+const DISMISS_KEY = 'pourology.installDismissed';
+let deferredPrompt = null;
+window.addEventListener('beforeinstallprompt', (e) => { e.preventDefault(); deferredPrompt = e; });
+window.addEventListener('appinstalled', () => { $('#install').innerHTML = ''; $('#install-top').innerHTML = ''; });
+
 function renderInstall() {
   const standalone = matchMedia('(display-mode: standalone)').matches || navigator.standalone;
   if (standalone) return;
@@ -170,23 +176,41 @@ function renderInstall() {
   const steps = ios
     ? 'In <strong>Safari</strong>, tap <strong>Share</strong> (the square with ↑) → <strong>Add to Home Screen</strong> → <strong>Add</strong>.'
     : 'Open your browser menu <strong>⋮</strong> → <strong>Add to Home screen</strong> (or <strong>Install app</strong>) → <strong>Add</strong>.';
+
+  async function install(stepsEl, container) {
+    if (deferredPrompt) {
+      deferredPrompt.prompt();
+      const { outcome } = await deferredPrompt.userChoice;
+      deferredPrompt = null;
+      if (outcome === 'accepted') { $('#install').innerHTML = ''; $('#install-top').innerHTML = ''; return; }
+    }
+    stepsEl.hidden = false;
+    container?.classList.add('open');
+  }
+
+  // Bottom box (always)
   $('#install').innerHTML = `<section class="install">
     <img src="icons/icon-192.png" alt="" width="56" height="56">
     <div><b>Keep our menu on your home screen</b><p>One tap for the menu, our location, call and WhatsApp. No app store needed.</p>
       <p class="ios-steps" id="install-steps" hidden>${steps}</p></div>
     <button type="button" class="cbtn" id="install-btn">${ICON.home} Add to Home Screen</button></section>`;
+  $('#install-btn').addEventListener('click', () => install($('#install-steps')));
 
-  let deferred = null;
-  window.addEventListener('beforeinstallprompt', (e) => { e.preventDefault(); deferred = e; });
-  window.addEventListener('appinstalled', () => { $('#install').innerHTML = ''; });
-  $('#install-btn').addEventListener('click', async () => {
-    if (deferred) {
-      deferred.prompt();
-      const { outcome } = await deferred.userChoice;
-      deferred = null;
-      if (outcome === 'accepted') { $('#install').innerHTML = ''; return; }
-    }
-    $('#install-steps').hidden = false;
+  // Top banner (unless dismissed in the last 7 days)
+  let dismissed = 0;
+  try { dismissed = Number(localStorage.getItem(DISMISS_KEY)) || 0; } catch {}
+  if (Date.now() - dismissed < 7 * 864e5) return;
+  $('#install-top').innerHTML = `<aside class="install-top" aria-label="Add Pourology to your home screen">
+    <img src="icons/icon-192.png" alt="" width="40" height="40">
+    <div><b>Get the Pourology app</b><span>Menu, location &amp; WhatsApp in one tap</span></div>
+    <button type="button" class="cbtn gold" id="install-top-btn">Add</button>
+    <button type="button" class="x" id="install-top-x" aria-label="Dismiss">×</button>
+    <p class="steps" id="install-top-steps" hidden>${steps}</p>
+  </aside>`;
+  $('#install-top-btn').addEventListener('click', () => install($('#install-top-steps'), $('.install-top')));
+  $('#install-top-x').addEventListener('click', () => {
+    try { localStorage.setItem(DISMISS_KEY, String(Date.now())); } catch {}
+    $('#install-top').innerHTML = '';
   });
 }
 

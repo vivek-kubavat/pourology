@@ -75,6 +75,16 @@
     .actionbar .cbtn { flex: 1; padding: 11px 8px; font-size: .9rem; }
     body.has-bar .mp { padding-bottom: 96px; }
     @media (min-width: 760px) { .actionbar { position: static; background: none; border: 0; padding: 0; margin: 0 0 22px; backdrop-filter: none; } .actionbar .cbtn { flex: 0 1 auto; padding: 11px 20px; } body.has-bar .mp { padding-bottom: 48px; } }
+    /* Top install banner */
+    .install-top { display: flex; align-items: center; gap: 12px; background: var(--espresso); color: var(--cream); border-radius: 18px; padding: 10px 10px 10px 12px; margin: -8px 0 20px; }
+    .install-top img { border-radius: 9px; flex: none; }
+    .install-top div { flex: 1; min-width: 0; line-height: 1.25; }
+    .install-top b { display: block; font-size: .95rem; }
+    .install-top span { font-size: .8rem; color: var(--gold); }
+    .install-top .cbtn { padding: 9px 14px; font-size: .85rem; white-space: nowrap; }
+    .install-top .x { background: none; border: 0; color: var(--cream); font-size: 1.3rem; line-height: 1; padding: 4px 6px; cursor: pointer; opacity: .7; }
+    .install-top .steps { flex-basis: 100%; font-size: .85rem; margin: 6px 0 2px; }
+    .install-top.open { flex-wrap: wrap; }
     .offline { font-size: .8rem; color: #6b5442; margin: -14px 0 18px; }
     @media (max-width: 480px) { .mp-head .wordmark b { font-size: 1.6rem; } .cat { border-radius: 28px; padding: 22px 18px; } }
   </style>
@@ -86,6 +96,7 @@
       <span class="city">AHMEDABAD</span>
     </header>
     <h1 class="tagline">Worth the wait.</h1>
+    <div id="install-top"></div>
     <nav class="actionbar" id="actionbar" aria-label="Contact Pourology" hidden></nav>
     <div id="findus"></div>
     <div id="menu"><div class="loading"><span class="spinner"></span>Loading menu…</div></div>
