@@ -3,7 +3,7 @@
     python3 scripts/make-icons.py
 
 - icon-192/512.png   the "Po" tile, full bleed (home-screen icon; the OS rounds the corners)
-- maskable-512.png   tile on cream with padding, safe for Android circle/squircle masks
+- maskable-192/512   full-bleed espresso, artwork inside the safe zone (Android circle/squircle icons)
 - logo-tile.png      tile with transparent rounded corners (header, login, menu)
 - favicon-64.png     small tab icon
 """
@@ -68,11 +68,15 @@ def main():
     full.resize((64, 64), Image.LANCZOS).save(OUT / "favicon-64.png", optimize=True)
     rounded_alpha(tile, radius).resize((256, 256), Image.LANCZOS).save(OUT / "logo-tile.png", optimize=True)
 
-    # Maskable: tile occupies ~70% so the 80% safe circle keeps "1:16" and "POUROLOGY" visible.
-    canvas = Image.new("RGB", (512, 512), CREAM)
-    t = rounded_alpha(tile, radius).resize((360, 360), Image.LANCZOS)
-    canvas.paste(t, (76, 76), t)
+    # Maskable (Android masks it to a circle/squircle): full-bleed espresso background with the tile
+    # artwork scaled to 72%, so "1:16" in the corner still sits inside the 80% safe circle
+    # (corner text is ~12% in from the tile edge → 0.38·√2·0.72 ≈ 0.39 < 0.40 from the centre).
+    canvas = Image.new("RGB", (512, 512), ESPRESSO)
+    inner = int(512 * 0.72)
+    t = full.resize((inner, inner), Image.LANCZOS)
+    canvas.paste(t, ((512 - inner) // 2, (512 - inner) // 2))
     canvas.save(OUT / "maskable-512.png", optimize=True)
+    canvas.resize((192, 192), Image.LANCZOS).save(OUT / "maskable-192.png", optimize=True)
     print("wrote", ", ".join(sorted(p.name for p in OUT.glob("*.png"))))
 
 
