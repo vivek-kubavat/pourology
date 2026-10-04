@@ -1,0 +1,16 @@
+{
+  "id": "./menu.html",
+  "name": "Pourology Menu",
+  "short_name": "Pourology",
+  "description": "Pourology Coffee Lab, Ahmedabad: menu, find our stall, call, WhatsApp and Porter delivery.",
+  "start_url": "./menu.html?source=homescreen",
+  "scope": "./",
+  "display": "standalone",
+  "background_color": "#fff4e0",
+  "theme_color": "#3b2414",
+  "icons": [
+    { "src": "icons/icon-192.png", "sizes": "192x192", "type": "image/png" },
+    { "src": "icons/icon-512.png", "sizes": "512x512", "type": "image/png" },
+    { "src": "icons/maskable-512.png", "sizes": "512x512", "type": "image/png", "purpose": "maskable" }
+  ]
+}

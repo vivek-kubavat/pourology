@@ -42,6 +42,8 @@ function seedDemo() {
   app.setToday(addDays(today, -2));
   ok('recordWithdrawal', { partner_id: 'vivek', amount: 1500, reason: 'Profit withdrawal' }, 'vivek@gmail.com');
   ok('recordWithdrawal', { partner_id: 'ishan', amount: 4000, reason: 'Profit withdrawal' }, 'ishan@gmail.com');
+  ok('setStallLocation', { lat: 23.0258, lng: 72.5873, accuracy: 15, label: 'Near Law Garden, Ellisbridge' }, 'ishan@gmail.com');
+  ok('setContact', { phone: '9825012345', whatsapp: '9825012345', delivery_enabled: true, delivery_note: '' }, 'ishan@gmail.com');
   app.setToday(null);
 }
 seedDemo();

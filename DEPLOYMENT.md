@@ -69,7 +69,15 @@ Commit and push. GitHub Actions runs the tests and publishes the site.
 - [ ] Record a test sale in Quick Sale → it appears in Sales and Partner Earnings.
 - [ ] On each phone, open the site in Chrome/Safari and choose **Add to Home Screen**.
 
-## Step 7: Print the menu QR
+## Step 7: Set stall location and contact numbers
+
+In the app, go to **Stall & Contact** (Vivek or Ishan):
+1. Stand at the stall and tap **📍 We're here — use my current location**. Allow location access the first time. On later days, you can use **📍 We're here** on Quick Sale.
+2. Enter the **call** and **WhatsApp** numbers, tick **Offer Porter delivery**, then **Save contact**.
+
+The customer menu then shows Find us, Call, WhatsApp and the Porter steps.
+
+## Step 8: Print the menu QR
 
 Open **Settings → Menu QR**. **Download card (PNG)** gives the full branded A6 card, ready to print or send to a printer. **Download QR with logo (PNG)** gives just the code for posters and Instagram. You can also print **Open printable table card** directly. Customers scan it and the menu opens.
 

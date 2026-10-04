@@ -6,6 +6,7 @@ import { $, esc, errorBox, loading, toast } from './ui.js';
 const PAGES = {
   home:        { label: 'My Share',         roles: ['ADMIN', 'PARTNER'], load: () => import('./pages/home.js') },
   sale:        { label: 'Quick Sale',       roles: ['ADMIN', 'PARTNER', 'STAFF'], load: () => import('./pages/sale.js') },
+  stall:       { label: 'Stall & Contact',  roles: ['ADMIN', 'PARTNER'], load: () => import('./pages/stall.js') },
   earnings:    { label: 'Partner Earnings', roles: ['ADMIN', 'PARTNER'], load: () => import('./pages/earnings.js') },
   withdrawals: { label: 'Withdrawals',      roles: ['ADMIN', 'PARTNER'], load: () => import('./pages/withdrawals.js') },
   report:      { label: 'Profit Report',    roles: ['ADMIN', 'PARTNER'], load: () => import('./pages/report.js') },

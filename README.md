@@ -75,6 +75,7 @@ brand/             official logo + menu artwork (source files, not deployed)
 
 - Colours, fonts (Fraunces + DM Sans) and the "Po" tile come from `brand/`. To change the icon, replace `brand/pourology-icon.jpg` and run `npm run icons`.
 - The seed menu is the real Pourology menu (Pour-over, Moka, Additives at ₹30). **Recipe grams and ingredient costs are estimates.** Correct them in Settings → Menu & recipes before relying on profit figures. Recording a purchase also updates an ingredient's cost.
+- **Stall & Contact** (app page, admin/partners): **📍 We're here** saves the stall's GPS location in one tap; it's also on Quick Sale. Set the public call and WhatsApp numbers and turn Porter delivery on or off here. The customer menu shows **Find us / Call / WhatsApp** buttons, a Porter delivery section, and an **Add to Home Screen** prompt. Partner names are never shown publicly.
 - `menu.html` is the public customer menu. Section subtitles and footers ("Brewed to order", "Made on the stove") are set in its `STYLE` map.
 
 ## Limits to know

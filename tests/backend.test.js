@@ -235,3 +235,36 @@ test('admin can void a wrong withdrawal; it stops counting as paid and is audite
   assert.equal(ok('getMyShare', {}, ISHAN).paid, 0);
   assert.ok(ok('listAudit', { entity: 'PARTNER_WITHDRAWALS' }, VIVEK).some((a) => a.action === 'VOID_WITHDRAWAL'));
 });
+
+test('stall location + contact: partners set them, customers read them publicly (no names/emails/money)', () => {
+  const { app, ok } = freshApp();
+  // public info starts empty
+  assert.deepEqual(app.call('getPublicInfo', {}).data.location, null);
+  // Ishan (partner) sets location in one tap and his numbers
+  ok('setStallLocation', { lat: 23.0225051, lng: 72.5713621, accuracy: 12, label: 'Near Law Garden' }, ISHAN);
+  ok('setContact', { phone: '98250 12345', whatsapp: '+91 98250-12345', delivery_enabled: true, delivery_note: 'Porter across Ahmedabad' }, ISHAN);
+  const pub = app.call('getPublicInfo', {});
+  assert.equal(pub.ok, true);
+  assert.deepEqual(pub.data.location, { lat: 23.022505, lng: 72.571362, label: 'Near Law Garden', updated_at: pub.data.location.updated_at });
+  assert.equal(pub.data.phone, '+919825012345');
+  assert.equal(pub.data.whatsapp, '+919825012345');
+  assert.deepEqual(pub.data.delivery, { enabled: true, note: 'Porter across Ahmedabad' });
+  const text = JSON.stringify(pub);
+  for (const w of ['ishan', 'Ishan', '@', 'accuracy', 'profit']) assert.ok(!text.includes(w), w);
+  // cache is refreshed on change
+  ok('setContact', { phone: '9000000001', whatsapp: '', delivery_enabled: false }, VIVEK);
+  assert.equal(app.call('getPublicInfo', {}).data.phone, '+919000000001');
+  assert.ok(ok('listAudit', { entity: 'SETTINGS' }, VIVEK).some((a) => a.action === 'SET_STALL_LOCATION'));
+});
+
+test('stall settings validation and roles', () => {
+  const { app, ok } = freshApp();
+  ok('saveUser', { email: 'staff@gmail.com', name: 'Staff', role: 'STAFF' }, VIVEK);
+  assert.equal(app.call('setStallLocation', { lat: 23, lng: 72 }, 'staff@gmail.com').code, 'FORBIDDEN');
+  assert.equal(app.call('setContact', { phone: '9825012345' }).code, 'AUTH');
+  assert.match(app.call('setContact', { phone: '12345' }, ISHAN).error, /valid 10-digit/);
+  assert.match(app.call('setContact', { phone: '5825012345' }, ISHAN).error, /valid 10-digit/);
+  assert.match(app.call('setContact', { phone: '', whatsapp: '', delivery_enabled: true }, ISHAN).error, /before turning on Porter/);
+  assert.match(app.call('setStallLocation', { lat: 123, lng: 72 }, ISHAN).error, /too large|Invalid/);
+  assert.match(app.call('setStallLocation', { lat: 23, lng: 72, accuracy: 5000 }, ISHAN).error, /accuracy is too low/);
+});

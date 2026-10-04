@@ -14,7 +14,8 @@ export async function render(root, ctx) {
     <div class="page-head"><h1>Quick Sale</h1>
       <div class="row">${stall.open
         ? `<span class="pill open">Stall open since ${new Date(stall.session.opened_at).toLocaleTimeString('en-IN', { hour: '2-digit', minute: '2-digit' })}</span><button class="btn ghost small" id="close">Close stall</button>`
-        : `<span class="pill pending">Stall closed</span><button class="btn small" id="open">Open stall</button>`}</div>
+        : `<span class="pill pending">Stall closed</span><button class="btn small" id="open">Open stall</button>`}
+        ${ctx.user.role !== 'STAFF' ? '<button class="btn ghost small" id="here" title="Update the location customers see on the menu">📍 We\'re here</button>' : ''}</div>
     </div>
     <div class="grid two">
       <section class="card">${[...new Set(items.map((i) => i.category))].map((cat) => `
@@ -62,6 +63,17 @@ export async function render(root, ctx) {
       $('#clear', root).click();
     } catch (err) { toast(err.message, 'error'); draw(); }
   };
+  $('#here', root)?.addEventListener('click', async (e) => {
+    const btn = e.currentTarget;
+    btn.disabled = true;
+    try {
+      const { getPosition } = await import('./stall.js');
+      const pos = await getPosition();
+      await call('setStallLocation', { lat: pos.coords.latitude, lng: pos.coords.longitude, accuracy: pos.coords.accuracy });
+      toast(`Stall location updated (±${Math.round(pos.coords.accuracy)} m)`);
+    } catch (err) { toast(err.code === 1 ? 'Allow location access to set the stall location' : err.message, 'error'); }
+    btn.disabled = false;
+  });
   $('#open', root)?.addEventListener('click', async () => {
     const cash = prompt('Opening cash in drawer (₹)', '0');
     if (cash === null) return;

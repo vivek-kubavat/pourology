@@ -9,6 +9,9 @@
   <meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self'; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; font-src https://fonts.gstatic.com; img-src 'self' data:; connect-src 'self' https://script.google.com https://script.googleusercontent.com; object-src 'none'; base-uri 'none'; form-action 'none'">
   <link rel="icon" href="icons/favicon-64.png" type="image/png">
   <link rel="apple-touch-icon" href="icons/icon-192.png">
+  <link rel="manifest" href="menu.webmanifest">
+  <meta name="apple-mobile-web-app-title" content="Pourology">
+  <meta name="apple-mobile-web-app-capable" content="yes">
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=DM+Sans:opsz,wght@9..40,400;9..40,500;9..40,700&family=Fraunces:ital,opsz,wght@0,9..144,600;1,9..144,500&display=swap">
@@ -39,6 +42,40 @@
     .adds ul { list-style: none; margin: 10px 0 0; padding: 0; display: flex; flex-wrap: wrap; gap: 8px 28px; font-size: 1.02rem; }
     .adds li::before { content: ""; display: inline-block; width: 9px; height: 9px; border-radius: 50%; margin-right: 9px; background: var(--dot, var(--teal)); }
     .mp-foot { margin-top: 26px; font-size: .75rem; letter-spacing: .25em; color: var(--teal-deep); text-transform: uppercase; }
+    /* Find us */
+    .findus { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 10px 16px; background: #fff9ee; border: 1.5px solid var(--line); border-radius: 22px; padding: 14px 18px; margin: -6px 0 22px; }
+    .findus b { font-family: var(--font-display); font-size: 1.15rem; }
+    .findus .muted { font-size: .85rem; }
+    /* Porter delivery */
+    .deliver { margin-top: 18px; background: var(--espresso); color: var(--cream); border-radius: 30px; padding: 24px 22px; }
+    .deliver h2 { font-size: 1.7rem; margin: 0 0 4px; color: var(--cream); }
+    .deliver .sub { margin: 0 0 14px; color: var(--gold); font-size: .95rem; }
+    .deliver ol { margin: 0; padding: 0; list-style: none; counter-reset: s; display: grid; gap: 14px; }
+    .deliver li { counter-increment: s; display: grid; grid-template-columns: 34px 1fr; gap: 10px; align-items: start; }
+    .deliver li::before { content: counter(s); width: 30px; height: 30px; border-radius: 50%; background: var(--gold); color: var(--espresso); display: grid; place-items: center; font-weight: 700; }
+    .deliver .acts { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 8px; }
+    .deliver .note { margin: 14px 0 0; font-size: .85rem; opacity: .85; }
+    .deliver label.row { display: flex; flex-wrap: nowrap; align-items: center; font-size: .85rem; color: var(--cream); gap: 8px; margin-top: 10px; }
+    .deliver label.row input { width: 18px; height: 18px; flex: none; accent-color: var(--gold); }
+    /* Buttons on the menu */
+    .cbtn { display: inline-flex; align-items: center; justify-content: center; gap: 8px; font: inherit; font-weight: 700; font-size: .95rem; text-decoration: none; border: 0; border-radius: 999px; padding: 11px 18px; cursor: pointer; background: var(--espresso); color: var(--cream); }
+    .cbtn.light { background: var(--cream); color: var(--espresso); }
+    .cbtn.wa { background: #1fa855; color: #fff; }
+    .cbtn.gold { background: var(--gold); color: var(--espresso); }
+    .cbtn svg { width: 18px; height: 18px; flex: none; }
+    /* Install */
+    .install { margin-top: 18px; display: flex; flex-wrap: wrap; align-items: center; gap: 14px; border: 1.5px dashed var(--teal-deep); border-radius: 22px; padding: 16px 18px; }
+    .install img { border-radius: 12px; }
+    .install div { flex: 1 1 200px; }
+    .install b { font-family: var(--font-display); font-size: 1.1rem; }
+    .install p { margin: 2px 0 0; font-size: .88rem; color: #6b5442; }
+    .ios-steps { margin: 10px 0 0; font-size: .9rem; }
+    /* Sticky one-tap bar (phones) */
+    .actionbar { position: fixed; left: 0; right: 0; bottom: 0; z-index: 10; display: flex; gap: 8px; padding: 10px 12px max(10px, env(safe-area-inset-bottom)); background: rgb(255 244 224 / 94%); backdrop-filter: blur(8px); border-top: 1px solid var(--line); }
+    .actionbar .cbtn { flex: 1; padding: 11px 8px; font-size: .9rem; }
+    body.has-bar .mp { padding-bottom: 96px; }
+    @media (min-width: 760px) { .actionbar { position: static; background: none; border: 0; padding: 0; margin: 0 0 22px; backdrop-filter: none; } .actionbar .cbtn { flex: 0 1 auto; padding: 11px 20px; } body.has-bar .mp { padding-bottom: 48px; } }
+    .offline { font-size: .8rem; color: #6b5442; margin: -14px 0 18px; }
     @media (max-width: 480px) { .mp-head .wordmark b { font-size: 1.6rem; } .cat { border-radius: 28px; padding: 22px 18px; } }
   </style>
 </head>
@@ -49,7 +86,11 @@
       <span class="city">AHMEDABAD</span>
     </header>
     <h1 class="tagline">Worth the wait.</h1>
+    <nav class="actionbar" id="actionbar" aria-label="Contact Pourology" hidden></nav>
+    <div id="findus"></div>
     <div id="menu"><div class="loading"><span class="spinner"></span>Loading menu…</div></div>
+    <div id="delivery"></div>
+    <div id="install"></div>
     <p class="mp-foot">Pay by UPI or cash at the counter</p>
   </main>
   <script type="module" src="menu.js"></script>

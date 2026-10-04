@@ -11,6 +11,7 @@ function actions_() {
   const PUBLIC = 'PUBLIC', A = 'ADMIN', P = 'PARTNER', S = 'STAFF';
   return {
     getMenu:            { roles: PUBLIC, fn: getMenuCached },
+    getPublicInfo:      { roles: PUBLIC, fn: getPublicInfo },
     me:                 { roles: [A, P, S], fn: (u) => u },
 
     // operations
@@ -29,6 +30,9 @@ function actions_() {
     listExpenses:       { roles: [A, P], fn: listExpenses },
     getInventory:       { roles: [A, P], fn: getInventory },
     listAudit:          { roles: [A, P], fn: listAudit },
+    getStallInfo:       { roles: [A, P], fn: getStallInfo },
+    setStallLocation:   { roles: [A, P], fn: setStallLocation, write: true },
+    setContact:         { roles: [A, P], fn: setContact, write: true },
 
     // finance & partners
     getPL:              { roles: [A, P], fn: getPL },
