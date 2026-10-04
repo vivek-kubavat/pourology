@@ -1,0 +1,46 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <title>Pourology</title>
+  <meta name="theme-color" content="#3b2414">
+  <meta name="robots" content="noindex">
+  <meta name="referrer" content="strict-origin-when-cross-origin">
+  <meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' https://accounts.google.com/gsi/client; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com https://accounts.google.com/gsi/style; font-src https://fonts.gstatic.com; img-src 'self' data: https://*.googleusercontent.com https://*.gstatic.com; connect-src 'self' https://script.google.com https://script.googleusercontent.com https://accounts.google.com/gsi/; frame-src https://accounts.google.com/gsi/; object-src 'none'; base-uri 'none'; form-action 'self'">
+  <link rel="manifest" href="manifest.webmanifest">
+  <link rel="icon" href="icons/favicon-64.png" type="image/png">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=DM+Sans:opsz,wght@9..40,400;9..40,500;9..40,700&family=Fraunces:ital,opsz,wght@0,9..144,600;1,9..144,500&display=swap">
+  <link rel="apple-touch-icon" href="icons/icon-192.png">
+  <link rel="stylesheet" href="styles.css">
+  <script src="https://accounts.google.com/gsi/client" async></script>
+  <script src="vendor/chart.umd.min.js" defer></script>
+  <script type="module" src="app.js"></script>
+</head>
+<body>
+  <section id="login" class="login" hidden>
+    <div class="login-card">
+      <img src="icons/logo-tile.png" alt="Pourology" width="88" height="88">
+      <div class="wordmark" style="justify-items:center"><b style="font-size:2rem">Pourology</b><small>COFFEE LAB</small></div>
+      <p class="muted">Business dashboard for partners and staff.</p>
+      <div id="login-msg"></div>
+      <div id="gsi-btn"></div>
+      <p class="muted small">Only authorised Google accounts can sign in. Looking for the menu? <a href="menu.html">View menu</a></p>
+    </div>
+  </section>
+
+  <div id="app" hidden>
+    <header class="top">
+      <a class="brand" href="#/"><img src="icons/logo-tile.png" alt="" width="34" height="34"><span class="wordmark"><b>Pourology</b><small>COFFEE LAB</small></span></a>
+      <div id="who" class="who"></div>
+    </header>
+    <nav id="nav" class="nav" aria-label="Main"></nav>
+    <main id="main" class="main"></main>
+  </div>
+
+  <div id="toast" class="toast" role="status" aria-live="polite"></div>
+  <noscript>Pourology needs JavaScript.</noscript>
+</body>
+</html>

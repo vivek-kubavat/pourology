@@ -1,0 +1,57 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Pourology Menu</title>
+  <meta name="description" content="Pourology Coffee Lab, Ahmedabad: pour-over and moka coffee, brewed to order.">
+  <meta name="theme-color" content="#3b2414">
+  <meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self'; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; font-src https://fonts.gstatic.com; img-src 'self' data:; connect-src 'self' https://script.google.com https://script.googleusercontent.com; object-src 'none'; base-uri 'none'; form-action 'none'">
+  <link rel="icon" href="icons/favicon-64.png" type="image/png">
+  <link rel="apple-touch-icon" href="icons/icon-192.png">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=DM+Sans:opsz,wght@9..40,400;9..40,500;9..40,700&family=Fraunces:ital,opsz,wght@0,9..144,600;1,9..144,500&display=swap">
+  <link rel="stylesheet" href="styles.css">
+  <style>
+    /* The printed menu is always cream, so this page keeps its light palette in dark mode too. */
+    body { background: var(--cream); color: var(--espresso); }
+    .mp { max-width: 980px; margin: 0 auto; padding: 28px 16px 48px; }
+    .mp-head { display: flex; justify-content: space-between; align-items: center; gap: 12px; }
+    .mp-head .brand { gap: 14px; }
+    .mp-head .wordmark b { font-size: 2rem; }
+    .mp-head .wordmark small { font-size: .7rem; color: var(--teal-deep); }
+    .city { font-size: .75rem; letter-spacing: .3em; color: var(--teal-deep); }
+    .tagline { font-family: var(--font-display); font-style: italic; font-weight: 500; font-size: clamp(2.6rem, 9vw, 4.6rem); line-height: 1; margin: 22px 0 26px; letter-spacing: -.02em; }
+    .cats { display: grid; gap: 18px; grid-template-columns: repeat(auto-fit, minmax(290px, 1fr)); }
+    .cat { border-radius: 34px; padding: 26px 24px 22px; background: var(--surface-2); color: var(--espresso); display: flex; flex-direction: column; }
+    .cat.teal { background: var(--teal); } .cat.peach { background: var(--peach); }
+    .cat h2 { font-size: 2rem; margin: 0; }
+    .cat .sub { margin: 2px 0 14px; font-size: .92rem; }
+    .item { margin: 10px 0 6px; }
+    .item-top { display: flex; justify-content: space-between; align-items: baseline; gap: 12px; }
+    .item h3 { font-size: 1.35rem; margin: 0; }
+    .item .price { font-family: var(--font-display); font-size: 1.35rem; font-weight: 600; white-space: nowrap; }
+    .item p { margin: 4px 0 0; font-size: .92rem; line-height: 1.45; }
+    .cat .foot { margin-top: auto; padding-top: 14px; font-size: .72rem; letter-spacing: .3em; text-transform: uppercase; }
+    .adds { margin-top: 18px; border: 1.5px solid var(--teal-deep); border-radius: 26px; padding: 18px 22px; }
+    .adds .eyebrow { color: var(--teal-deep); }
+    .adds ul { list-style: none; margin: 10px 0 0; padding: 0; display: flex; flex-wrap: wrap; gap: 8px 28px; font-size: 1.02rem; }
+    .adds li::before { content: ""; display: inline-block; width: 9px; height: 9px; border-radius: 50%; margin-right: 9px; background: var(--dot, var(--teal)); }
+    .mp-foot { margin-top: 26px; font-size: .75rem; letter-spacing: .25em; color: var(--teal-deep); text-transform: uppercase; }
+    @media (max-width: 480px) { .mp-head .wordmark b { font-size: 1.6rem; } .cat { border-radius: 28px; padding: 22px 18px; } }
+  </style>
+</head>
+<body>
+  <main class="mp">
+    <header class="mp-head">
+      <span class="brand"><img src="icons/logo-tile.png" alt="" width="64" height="64"><span class="wordmark"><b>Pourology</b><small>COFFEE LAB</small></span></span>
+      <span class="city">AHMEDABAD</span>
+    </header>
+    <h1 class="tagline">Worth the wait.</h1>
+    <div id="menu"><div class="loading"><span class="spinner"></span>Loading menu…</div></div>
+    <p class="mp-foot">Pay by UPI or cash at the counter</p>
+  </main>
+  <script type="module" src="menu.js"></script>
+</body>
+</html>

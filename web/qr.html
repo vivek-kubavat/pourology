@@ -1,0 +1,57 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Menu QR Card</title>
+  <meta name="robots" content="noindex">
+  <meta http-equiv="Content-Security-Policy" content="default-src 'self'; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; font-src https://fonts.gstatic.com; img-src 'self' data:; script-src 'none'; object-src 'none'; base-uri 'none'; form-action 'none'">
+  <link rel="icon" href="icons/favicon-64.png" type="image/png">
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=DM+Sans:opsz,wght@9..40,400;9..40,500;9..40,700&family=Fraunces:ital,opsz,wght@0,9..144,600;1,9..144,500&display=swap">
+  <link rel="stylesheet" href="styles.css">
+  <style>
+    body { background: #e9dcc6; color: var(--espresso); }
+    .wrap { display: grid; justify-items: center; gap: 16px; padding: 24px 16px 40px; }
+    .tools { display: flex; flex-wrap: wrap; gap: 8px; justify-content: center; }
+    .tools p { width: 100%; text-align: center; margin: 0; color: #6b5442; font-size: .9rem; }
+    /* A6 table card (105 × 148 mm) */
+    .card-qr { width: min(105mm, 100%); aspect-ratio: 105 / 148; background: var(--cream); border-radius: 6mm; padding: 7mm 7mm 6mm;
+      display: flex; flex-direction: column; align-items: center; text-align: center; box-shadow: 0 8px 30px rgb(59 36 20 / 18%); }
+    .card-qr .brand { gap: 3mm; }
+    .card-qr .wordmark b { font-size: 7mm; }
+    .card-qr .wordmark small { font-size: 2.2mm; color: var(--teal-deep); }
+    .card-qr h1 { font-family: var(--font-display); font-style: italic; font-weight: 500; font-size: 9mm; margin: 4mm 0 1mm; }
+    .card-qr .scan { font-size: 3mm; letter-spacing: .3em; text-transform: uppercase; color: var(--teal-deep); margin: 0 0 3mm; }
+    .card-qr img.qr { width: 62mm; height: 62mm; }
+    .card-qr .how { font-size: 3mm; margin: 3mm 0 0; color: #6b5442; }
+    .card-qr .city { margin-top: auto; font-size: 2.4mm; letter-spacing: .3em; color: var(--teal-deep); }
+    @page { size: A6; margin: 0; }
+    @media print {
+      body { background: none; }
+      .tools { display: none; }
+      .wrap { padding: 0; }
+      .card-qr { width: 105mm; height: 148mm; border-radius: 0; box-shadow: none; }
+      * { -webkit-print-color-adjust: exact; print-color-adjust: exact; }
+    }
+  </style>
+</head>
+<body>
+  <div class="wrap">
+    <div class="tools">
+      <p>Print this card (A6, or several per A4) and place it on the counter and tables. Customers scan it to open the menu.</p>
+      <a class="btn" href="qr/menu-qr.png" download="pourology-menu-qr.png">Download QR (PNG)</a>
+      <a class="btn ghost" href="qr/menu-qr.svg" download="pourology-menu-qr.svg">Download QR (SVG)</a>
+      <a class="btn ghost" href="menu.html">Open menu</a>
+    </div>
+
+    <article class="card-qr">
+      <span class="brand"><img src="icons/logo-tile.png" alt="" width="48" height="48"><span class="wordmark"><b>Pourology</b><small>COFFEE LAB</small></span></span>
+      <h1>Worth the wait.</h1>
+      <p class="scan">Scan for our menu</p>
+      <img class="qr" src="qr/menu-qr.svg" alt="QR code that opens the Pourology menu">
+      <p class="how">Point your phone camera at the code</p>
+      <span class="city">AHMEDABAD</span>
+    </article>
+  </div>
+</body>
+</html>

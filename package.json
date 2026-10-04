@@ -1,0 +1,16 @@
+{
+  "name": "pourology",
+  "private": true,
+  "description": "Pourology coffee stall \u2014 zero-cost PWA (GitHub Pages) + Google Apps Script / Google Sheets backend",
+  "scripts": {
+    "test": "node --test tests/",
+    "dev": "node scripts/dev-server.js",
+    "icons": "python3 scripts/make-icons.py",
+    "push:script": "cd apps-script && npx --yes @google/clasp push",
+    "deploy:script": "cd apps-script && npx --yes @google/clasp deploy",
+    "qr": "node scripts/make-qr.js"
+  },
+  "devDependencies": {
+    "qrcode": "^1.5.4"
+  }
+}
