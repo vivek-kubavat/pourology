@@ -4,7 +4,7 @@ import { plLedger, traceBlock } from './shared.js';
 // §73–76, §84, §88: Partner Earnings dashboard.
 export async function render(root, { call }) {
   root.innerHTML = `
-    <div class="page-head"><div><h1>Partner Earnings</h1><p class="muted small">Estimated / internal profit share, derived from recorded sales and expenses.</p></div></div>
+    <div class="page-head"><div><h1>Partner Earnings</h1><p class="muted small">Sales − Purchases − Expenses, shared by ownership %. Estimated / internal.</p></div></div>
     <div class="card" id="picker"></div>
     <div id="body"></div>`;
   let chart, seq = 0;
@@ -41,18 +41,19 @@ export async function render(root, { call }) {
           <tfoot><tr><td>Total distributed</td><td></td><td class="num">${inr(d.total_distributed)}</td><td></td></tr></tfoot>
         </table></div>
         ${d.unallocated_profit ? `<div class="alert error">${inr(d.unallocated_profit)} of profit falls on days with no ownership record and is not distributed. Check Settings → Ownership history.</div>` : ''}
-        ${b.distributable_profit < 0 ? '<div class="alert">The business made a loss in this period, so shares are negative (each partner bears their ownership % of the loss).</div>' : ''}
+        ${b.profit < 0 ? '<div class="alert">The business made a loss in this period, so shares are negative (each partner bears their ownership % of the loss).</div>' : ''}
       </section>
 
       <section class="card">
         <h2>Cumulative earnings</h2>
         <div class="table-wrap"><table class="data">
-          <thead><tr><th>Partner</th><th class="num">Ownership</th><th class="num">This month</th><th class="num">Total since start</th><th class="num">Paid</th><th class="num">Remaining</th><th>Status</th></tr></thead>
+          <thead><tr><th>Partner</th><th class="num">Ownership</th><th class="num">Invested</th><th class="num">This month</th><th class="num">Total earned</th><th class="num">Withdrawn</th><th class="num">Remaining</th><th>Status</th></tr></thead>
           <tbody>${d.cumulative.map((r) => `
-            <tr><td><strong>${esc(r.name)}</strong></td><td class="num">${r.ownership}%</td><td class="num">${inr(r.this_month)}</td><td class="num">${inr(r.total_earned)}</td>
+            <tr><td><strong>${esc(r.name)}</strong></td><td class="num">${r.ownership}%</td><td class="num">${inr(r.invested)}</td><td class="num">${inr(r.this_month)}</td><td class="num">${inr(r.total_earned)}</td>
             <td class="num">${inr(r.paid)}</td><td class="num">${inr(r.remaining)}</td><td>${statusPill(r.status)}</td></tr>`).join('')}
           </tbody>
         </table></div>
+        <p class="muted small">Total investment ${inr(d.total_invested)} (see <a href="#/investment">Investment</a>). It is recorded for reference and not taken out of profit.</p>
         ${DISCLAIMER_HTML(d.disclaimer)}
       </section>`;
     chart = ownershipDonut($('#donut', body), d.current_ownership);

@@ -3,13 +3,21 @@
 // no partner names.
 import { call } from './api.js';
 import { esc } from './ui.js';
+import { ART, addonIcon, addonRank, LINE } from './menu-art.js';
 
-// Look of each section, from the printed menu. Categories not listed here get a plain card.
+// Tagline and artwork of each section, from the printed menu. Other categories get a plain section.
 const STYLE = {
-  'Pour-over': { cls: 'teal', sub: 'Brewed slow, one cup at a time', foot: 'Brewed to order' },
-  'Moka': { cls: 'peach', sub: 'Stovetop, strong and sweet', foot: 'Made on the stove' },
+  'pour-over': 'Brewed slow.\nOne cup at a time.',
+  'moka': 'Stovetop. Strong and sweet.',
+  'filter coffee': 'A timeless classic.',
 };
-const DOTS = ['var(--teal)', 'var(--peach)', 'var(--gold)', 'var(--espresso)'];
+// Plain-language name printed in teal under each drink's lab name.
+const ALT = {
+  'clear solution': 'Classic Black Pour-over', 'cryo pour': 'Iced Pour-over', 'cold fusion': 'Cold Brew',
+  'covalent bond': 'Creamy Moka Latte', 'dark matter': 'Strong Black Moka', 'saturated solution': 'Spanish Moka',
+  'south indian filter coffee': 'Rich. Aromatic. Authentic.',
+};
+const key = (v) => String(v).trim().toLowerCase();
 const CACHE_KEY = 'pourology.menu.v1';
 const rupees = (n) => '₹' + Number(n).toLocaleString('en-IN');
 const $ = (s) => document.querySelector(s);
@@ -60,25 +68,44 @@ async function load() {
 function renderMenu(items) {
   const groups = new Map();
   items.forEach((i) => { const c = i.category || 'Menu'; if (!groups.has(c)) groups.set(c, []); groups.get(c).push(i); });
-  const adds = groups.get('Additives') || [];
+  const adds = (groups.get('Additives') || []).map((x, k) => ({ ...x, k })).sort((x, y) => addonRank(x.name) - addonRank(y.name) || x.k - y.k);
   groups.delete('Additives');
 
-  const cards = [...groups].map(([cat, list]) => {
-    const st = STYLE[cat] || { cls: '', sub: '', foot: '' };
-    return `<section class="cat ${st.cls}">
-      <h2>${esc(cat)}</h2>${st.sub ? `<p class="sub">${esc(st.sub)}</p>` : ''}
-      ${list.map((i) => `<div class="item"><div class="item-top"><h3>${esc(i.name)}</h3><span class="price">${rupees(i.price)}</span></div>${i.description ? `<p>${esc(i.description)}</p>` : ''}</div>`).join('')}
-      ${st.foot ? `<div class="foot">${esc(st.foot)}</div>` : ''}
+  const cats = [...groups.keys()].map(key);
+  const secs = [...groups].map(([cat, list], n) => {
+    const art = ART[key(cat)], tag = STYLE[key(cat)];
+    // On the printed menu the moka pot pours straight into the filter coffee tumbler below it.
+    const flow = cats[n] === 'moka' && cats[n + 1] === 'filter coffee' ? ' pours' : cats[n] === 'filter coffee' && cats[n - 1] === 'moka' ? ' pour' : '';
+    return `<section class="sec${art ? '' : ' noart'}${flow}">
+      ${art ? `<div class="art">${art}</div>` : ''}
+      <div class="sec-head"><h2>${esc(cat)}</h2>${tag ? `<p>${esc(tag).replace('\n', '<br>')}</p>` : ''}</div>
+      <div class="rows">${list.map((i) => `<div class="row">
+        <div class="nm"><h3>${esc(i.name)}</h3>${ALT[key(i.name)] ? `<span class="alt">${ALT[key(i.name)]}</span>` : ''}</div>
+        ${i.description ? `<p>${esc(i.description)}</p>` : ''}<span class="price">${rupees(i.price)}</span></div>`).join('')}</div>
     </section>`;
   }).join('');
 
   const samePrice = adds.length && adds.every((a) => a.price === adds[0].price);
-  const addBox = adds.length ? `<section class="adds">
-    <div class="eyebrow">Additives${samePrice ? ` · ${rupees(adds[0].price)} each` : ''}</div>
-    <ul>${adds.map((a, k) => `<li style="--dot:${DOTS[k % DOTS.length]}">${esc(a.name)}${samePrice ? '' : ` · ${rupees(a.price)}`}</li>`).join('')}</ul>
+  const addBox = adds.length ? `<section class="adds" style="--n:${adds.length}">
+    <div class="adds-h"><b>ADD<br>-ONS</b>${samePrice ? `<small>${rupees(adds[0].price)} each</small>` : ''}</div>
+    ${adds.map((a) => `<div class="add">${addonIcon(a.name)}${esc(a.name)}${samePrice ? '' : `<small>${rupees(a.price)}</small>`}</div>`).join('')}
   </section>` : '';
 
-  $('#menu').innerHTML = cards || addBox ? `<div class="cats">${cards}</div>${addBox}` : '<p class="muted">Menu coming soon.</p>';
+  $('#menu').innerHTML = secs || addBox ? secs + addBox : '<p class="muted">Menu coming soon.</p>';
+}
+
+// ---------- footer of the sheet: find us, WhatsApp, Porter ----------
+function renderFoot(info) {
+  const { location: loc, phone, whatsapp, delivery } = info || {};
+  const find = loc ? directionsUrl(loc) : phone ? telUrl(phone) : '';
+  const links = [
+    find ? `<a href="${esc(find)}"${loc ? ' target="_blank" rel="noopener"' : ''}>${LINE.phone} Find us</a>` : '',
+    whatsapp ? `<a href="${esc(waUrl(whatsapp, 'Hi Pourology! '))}" target="_blank" rel="noopener">${LINE.wa} WhatsApp</a>` : '',
+    delivery && delivery.enabled && (phone || whatsapp) ? `<a href="#delivery">${LINE.scooter} Porter delivery</a>` : '',
+  ].join('');
+  $('#foot').innerHTML = `<footer class="foot">
+    ${links ? `<div class="links">${links}</div>` : '<div class="links"></div>'}
+    <span class="city">AHMEDABAD</span></footer>`;
 }
 
 // ---------- one-tap contact ----------
@@ -190,7 +217,7 @@ function renderInstall() {
 
   // Bottom box (always)
   $('#install').innerHTML = `<section class="install">
-    <img src="icons/icon-192.png" alt="" width="56" height="56">
+    <img src="icons/menu-192.png" alt="" width="56" height="56">
     <div><b>Keep our menu on your home screen</b><p>One tap for the menu, our location, call and WhatsApp. No app store needed.</p>
       <p class="ios-steps" id="install-steps" hidden>${steps}</p></div>
     <button type="button" class="cbtn" id="install-btn">${ICON.home} Add to Home Screen</button></section>`;
@@ -201,7 +228,7 @@ function renderInstall() {
   try { dismissed = Number(localStorage.getItem(DISMISS_KEY)) || 0; } catch {}
   if (Date.now() - dismissed < 7 * 864e5) return;
   $('#install-top').innerHTML = `<aside class="install-top" aria-label="Add Pourology to your home screen">
-    <img src="icons/icon-192.png" alt="" width="40" height="40">
+    <img src="icons/menu-192.png" alt="" width="40" height="40">
     <div><b>Get the Pourology app</b><span>Menu, location &amp; WhatsApp in one tap</span></div>
     <button type="button" class="cbtn gold" id="install-top-btn">Add</button>
     <button type="button" class="x" id="install-top-x" aria-label="Dismiss">×</button>
@@ -220,9 +247,10 @@ renderInstall();
 try {
   const data = await load();
   renderMenu(data.items);
+  renderFoot(data.info);
   renderContact(data.info);
   renderDelivery(data.info);
-  if (data.offline) $('#findus').insertAdjacentHTML('afterbegin', `<p class="offline">You're offline. Showing the menu saved on ${esc(new Date(data.saved).toLocaleString('en-IN', { dateStyle: 'medium', timeStyle: 'short' }))}.</p>`);
+  if (data.offline) $('#notice').insertAdjacentHTML('afterbegin', `<p class="offline">You're offline. Showing the menu saved on ${esc(new Date(data.saved).toLocaleString('en-IN', { dateStyle: 'medium', timeStyle: 'short' }))}.</p>`);
 } catch (e) {
   $('#menu').innerHTML = '<p class="muted">Menu unavailable right now. Please ask at the stall.</p>';
 }

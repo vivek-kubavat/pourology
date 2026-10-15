@@ -6,15 +6,19 @@
 - maskable-192/512   full-bleed espresso, artwork inside the safe zone (Android circle/squircle icons)
 - logo-tile.png      tile with transparent rounded corners (header, login, menu)
 - favicon-64.png     small tab icon
+- menu-192/512, menu-maskable-192/512   customer-menu app: cream icon with the tile and "MENU", so it
+                     looks different from the partner app on the same phone
 """
 from pathlib import Path
-from PIL import Image, ImageDraw
+from PIL import Image, ImageDraw, ImageFont
 
 ROOT = Path(__file__).resolve().parent.parent
 SRC = ROOT / "brand" / "pourology-icon.jpg"
 OUT = ROOT / "web" / "icons"
 ESPRESSO = (59, 36, 20)
 CREAM = (255, 244, 224)
+PAPER = (244, 236, 220)
+FONT = ROOT / "brand" / "fonts" / "DMSans-Variable.ttf"
 
 
 def tile_bounds(img):
@@ -77,6 +81,31 @@ def main():
     canvas.paste(t, ((512 - inner) // 2, (512 - inner) // 2))
     canvas.save(OUT / "maskable-512.png", optimize=True)
     canvas.resize((192, 192), Image.LANCZOS).save(OUT / "maskable-192.png", optimize=True)
+    # Customer menu app: cream background, smaller tile and the word MENU underneath.
+    # tile_frac/label sizes keep everything inside the 80% safe circle for the maskable version.
+    for name, tile_frac, font_frac in (("menu", 0.56, 0.115), ("menu-maskable", 0.46, 0.095)):
+        c = Image.new("RGB", (512, 512), PAPER)
+        side = int(512 * tile_frac)
+        t = rounded_alpha(tile, radius).resize((side, side), Image.LANCZOS)
+        font = ImageFont.truetype(str(FONT), int(512 * font_frac))
+        try:
+            font.set_variation_by_axes([14, 700])
+        except Exception:
+            pass
+        d = ImageDraw.Draw(c)
+        label, spacing = "MENU", int(512 * font_frac * 0.18)
+        widths = [d.textlength(ch, font=font) for ch in label]
+        text_w = sum(widths) + spacing * (len(label) - 1)
+        asc, desc = font.getmetrics()
+        gap = int(512 * 0.035)
+        top = (512 - (side + gap + asc)) // 2
+        c.paste(t, ((512 - side) // 2, top), t)
+        x = (512 - text_w) / 2
+        for ch, w in zip(label, widths):
+            d.text((x, top + side + gap), ch, font=font, fill=ESPRESSO)
+            x += w + spacing
+        c.save(OUT / f"{name}-512.png", optimize=True)
+        c.resize((192, 192), Image.LANCZOS).save(OUT / f"{name}-192.png", optimize=True)
     print("wrote", ", ".join(sorted(p.name for p in OUT.glob("*.png"))))
 
 

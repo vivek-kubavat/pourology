@@ -240,28 +240,38 @@ function closeStall(user, p) {
 }
 
 // ---------- purchases ----------
+/**
+ * Anything bought from business income: milk, beans, cups, a new kettle… Every purchase is subtracted
+ * from profit on its date. Picking a stock ingredient also adds it to Inventory and updates that
+ * ingredient's cost; otherwise just the item name and price are recorded.
+ */
 function addPurchase(user, p) {
-  const ing = readAll_('INGREDIENTS').find((i) => i.ingredient_id === p.ingredient_id);
-  if (!ing) throw new Error('Choose an ingredient.');
-  const qty = num_(p.qty, 'Quantity', { positive: true, max: 1000000 });
   const total = num_(p.total_cost, 'Total cost', { positive: true, max: 1000000 });
+  const date = openDate_(p.date);
+  const supplier = str_(p.supplier, 'Supplier');
+  const ing = p.ingredient_id ? readAll_('INGREDIENTS').find((i) => i.ingredient_id === p.ingredient_id) : null;
+  if (p.ingredient_id && !ing) throw new Error('Unknown stock ingredient.');
+
+  if (!ing) {
+    const qty = p.qty === undefined || p.qty === null || p.qty === '' ? 1 : num_(p.qty, 'Quantity', { positive: true, max: 1000000 });
+    const row = {
+      purchase_id: newId_('PUR'), date: date, ingredient_id: '', ingredient_name: str_(p.item, 'Item', true).slice(0, 100),
+      qty: qty, unit: str_(p.unit, 'Unit').slice(0, 20), total_cost: total, unit_cost: Math.round((total / qty) * 10000) / 10000,
+      supplier: supplier, entered_by: user.email, created_at: nowIso_(), status: 'ACTIVE',
+    };
+    append_('PURCHASES', row);
+    audit_(user, 'ADD_PURCHASE', 'PURCHASES', row.purchase_id, null, row);
+    return row;
+  }
+
+  const qty = num_(p.qty, 'Quantity', { positive: true, max: 1000000 });
   const unitCost = Math.round((total / qty) * 10000) / 10000;
   if (unitCost <= 0) throw new Error('Unit cost works out to ₹0. Check the quantity and total cost.');
-  const date = openDate_(p.date);
-
-  // The latest purchase price becomes the cost used for future sales' COGS. A partner entering a fake
-  // price could inflate profit (and their withdrawable share), so big price swings need an admin.
   const old = Number(ing.cost_per_unit) || 0;
-  const change = old > 0 ? Math.abs(unitCost - old) / old : 0;
-  if (change > 0.5 && user.role !== ROLES.ADMIN) {
-    throw new Error('Unit cost ₹' + unitCost + ' differs from the current ₹' + old + ' by more than 50%. ' +
-      'Check the quantity/total, or ask the admin to record this purchase.');
-  }
   const newest = !readAll_('PURCHASES').some((x) => x.ingredient_id === ing.ingredient_id && x.status !== 'VOID' && x.date > date);
-
   const row = {
     purchase_id: newId_('PUR'), date: date, ingredient_id: ing.ingredient_id, ingredient_name: ing.name,
-    qty: qty, unit: ing.unit, total_cost: total, unit_cost: unitCost, supplier: str_(p.supplier, 'Supplier'),
+    qty: qty, unit: ing.unit, total_cost: total, unit_cost: unitCost, supplier: supplier,
     entered_by: user.email, created_at: nowIso_(), status: 'ACTIVE',
   };
   append_('PURCHASES', row);
@@ -274,6 +284,8 @@ function addPurchase(user, p) {
 function voidPurchase(user, p) {
   const row = readAll_('PURCHASES').find((x) => x.purchase_id === p.purchase_id && x.status !== 'VOID');
   if (!row) throw new Error('Purchase not found.');
+  const closed = lastClosedEnd_();
+  if (closed && row.date <= closed) throw new Error('This purchase is in a closed period and cannot be voided.');
   update_('PURCHASES', row._row, { status: 'VOID' });
   audit_(user, 'VOID_PURCHASE', 'PURCHASES', row.purchase_id, strip_(row), { status: 'VOID', reason: str_(p.reason, 'Reason', true) });
   return { purchase_id: row.purchase_id };
@@ -289,9 +301,6 @@ function listPurchases(user, p) {
 // ---------- expenses ----------
 function expenseCategories_() {
   return String(getSetting_('expense_categories', DEFAULT_EXPENSE_CATEGORIES.join(','))).split(',').map((s) => s.trim()).filter(Boolean);
-}
-function distributableCategories_() {
-  return String(getSetting_('distributable_expense_categories', '')).split(',').map((s) => s.trim()).filter(Boolean);
 }
 
 function addExpense(user, p) {
@@ -319,27 +328,21 @@ function voidExpense(user, p) {
 function listExpenses(user, p) {
   const all = readAll_('EXPENSES');
   const range = resolveRange_(p, all.length ? all[0].date : today_());
-  const dist = distributableCategories_();
-  const rows = all.filter((r) => r.date >= range.from && r.date <= range.to).map((r) => {
-    const o = strip_(r);
-    o.distributable = dist.indexOf(r.category) >= 0;
-    return o;
-  }).reverse();
-  return { range: range, rows: rows, categories: expenseCategories_(), distributable: dist };
+  const rows = all.filter((r) => r.date >= range.from && r.date <= range.to).map(strip_).reverse();
+  return { range: range, rows: rows, categories: expenseCategories_(),
+    total: round2_(rows.filter((r) => r.status !== 'VOID').reduce((t, r) => t + FinanceCore.fromPaise(FinanceCore.toPaise(r.amount)), 0)) };
 }
 
-/** §86 — partners define what counts as a distributable business expense. Sensitive: audited. */
+/** Admin edits the list of expense categories. Every recorded expense counts toward profit. Audited. */
 function setExpenseRules(user, p) {
   if (!Array.isArray(p.categories) || p.categories.length > 50) throw new Error('Up to 50 expense categories allowed.');
   const cats = p.categories.map((c) => str_(c, 'Category').slice(0, 40)).filter(Boolean);
   if (!cats.length) throw new Error('At least one expense category is required.');
   if (cats.some((c) => c.indexOf(',') >= 0)) throw new Error('Category names cannot contain commas.');
-  const dist = (Array.isArray(p.distributable) ? p.distributable : []).filter((c) => cats.indexOf(c) >= 0);
-  const before = { categories: expenseCategories_(), distributable: distributableCategories_() };
+  const before = { categories: expenseCategories_() };
   setSetting_('expense_categories', cats.join(','), user);
-  setSetting_('distributable_expense_categories', dist.join(','), user);
-  audit_(user, 'SET_EXPENSE_RULES', 'SETTINGS', 'distributable_expense_categories', before, { categories: cats, distributable: dist });
-  return { categories: cats, distributable: dist };
+  audit_(user, 'SET_EXPENSE_RULES', 'SETTINGS', 'expense_categories', before, { categories: cats });
+  return { categories: cats };
 }
 
 // ---------- inventory ----------
@@ -349,7 +352,8 @@ function getInventory() {
   const stock = {};
   ings.forEach((i) => { stock[i.ingredient_id] = { purchased: 0, used: 0, purchaseValue: 0 }; });
   readAll_('PURCHASES').forEach((p) => {
-    if (p.status !== 'VOID' && stock[p.ingredient_id]) { stock[p.ingredient_id].purchased += Number(p.qty); stock[p.ingredient_id].purchaseValue += Number(p.total_cost); }
+    // Purchases without a stock ingredient (cups, a kettle…) are not inventory.
+    if (p.status !== 'VOID' && p.ingredient_id && stock[p.ingredient_id]) { stock[p.ingredient_id].purchased += Number(p.qty); stock[p.ingredient_id].purchaseValue += Number(p.total_cost); }
   });
   const recipe = {};
   readAll_('RECIPES').forEach((r) => { (recipe[r.item_id] = recipe[r.item_id] || []).push(r); });

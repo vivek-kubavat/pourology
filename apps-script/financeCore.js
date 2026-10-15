@@ -5,12 +5,15 @@
  * Conventions:
  *  - Dates are 'YYYY-MM-DD' strings (business timezone: Asia/Kolkata).
  *  - Money is handled internally as integer paise to avoid float drift.
- *  - Partner earnings are DERIVED from recorded sales/expenses, never stored as totals.
+ *  - Partner earnings are DERIVED from recorded sales/purchases/expenses, never stored as totals.
+ *  - Profit = Sales − Purchases − Expenses (cash basis). Investment is tracked separately and is not
+ *    part of profit.
  */
 var FinanceCore = (function () {
   // ---------- money ----------
   function toPaise(rupees) {
-    var n = Number(rupees);
+    // Tolerate values typed into the sheet by hand, e.g. "₹1,200" or " 450 ".
+    var n = typeof rupees === 'string' ? Number(rupees.replace(/[₹,\s]/g, '')) : Number(rupees);
     return isFinite(n) ? Math.round(n * 100) : 0;
   }
   function fromPaise(paise) {
@@ -61,45 +64,45 @@ var FinanceCore = (function () {
 
   // ---------- P&L ----------
   /**
-   * Aggregate recorded transactions into per-day buckets (paise).
-   * sales:    [{date, qty, total, total_cogs, status}]
-   * expenses: [{date, category, amount, status}]
-   * distributableCategories: categories partners agreed count as distributable expenses.
+   * Aggregate recorded transactions into per-day buckets (paise). VOID rows are ignored.
+   * sales:     [{date, qty, total, status}]
+   * expenses:  [{date, amount, status}]
+   * purchases: [{date, total_cost, status}]   bought from business income
    */
-  function dailyPL(sales, expenses, distributableCategories) {
-    var allowed = {};
-    (distributableCategories || []).forEach(function (c) { allowed[String(c).trim().toLowerCase()] = true; });
+  function dailyPL(sales, expenses, purchases) {
     var days = {};
     function bucket(d) {
-      return days[d] || (days[d] = { revenue: 0, cogs: 0, expenses: 0, nonDistributableExpenses: 0, cups: 0, orders: 0 });
+      return days[d] || (days[d] = { revenue: 0, purchases: 0, expenses: 0, cups: 0, orders: 0 });
     }
     (sales || []).forEach(function (s) {
       if (s.status === 'VOID') return;
       var b = bucket(s.date);
       b.revenue += toPaise(s.total);
-      b.cogs += toPaise(s.total_cogs);
       b.cups += Number(s.qty) || 0;
       b.orders += 1;
     });
+    (purchases || []).forEach(function (p) {
+      if (p.status === 'VOID') return;
+      bucket(p.date).purchases += toPaise(p.total_cost);
+    });
     (expenses || []).forEach(function (e) {
       if (e.status === 'VOID') return;
-      var b = bucket(e.date);
-      if (allowed[String(e.category).trim().toLowerCase()]) b.expenses += toPaise(e.amount);
-      else b.nonDistributableExpenses += toPaise(e.amount);
+      bucket(e.date).expenses += toPaise(e.amount);
     });
     return days;
   }
 
-  /** Sum day buckets over an inclusive range. Distributable = revenue − COGS − distributable expenses. */
+  function dayProfit(b) { return b ? b.revenue - b.purchases - b.expenses : 0; }
+
+  /** Sum day buckets over an inclusive range. Profit = Sales − Purchases − Expenses. */
   function summarize(days, from, to) {
-    var t = { revenue: 0, cogs: 0, expenses: 0, nonDistributableExpenses: 0, cups: 0, orders: 0 };
+    var t = { revenue: 0, purchases: 0, expenses: 0, cups: 0, orders: 0 };
     Object.keys(days).forEach(function (d) {
       if (d < from || d > to) return;
       var b = days[d];
       for (var k in t) t[k] += b[k];
     });
-    t.grossProfit = t.revenue - t.cogs;
-    t.distributable = t.grossProfit - t.expenses;
+    t.profit = t.revenue - t.purchases - t.expenses;
     return t;
   }
 
@@ -184,7 +187,7 @@ var FinanceCore = (function () {
       var owners = ownershipOn(history, d);
       var key = JSON.stringify(owners);
       var b = days[d];
-      var profit = b ? b.revenue - b.cogs - b.expenses : 0;
+      var profit = dayProfit(b);
       if (!owners.length) { unallocated += profit; cur = null; return; }
       if (cur && cur.key === key) { cur.to = d; cur.profit += profit; }
       else { cur = { key: key, from: d, to: d, profit: profit, owners: owners }; segments.push(cur); }

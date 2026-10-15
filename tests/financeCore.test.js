@@ -9,11 +9,11 @@ const HISTORY = [
 ];
 const rupees = (p) => F.fromPaise(p);
 
-function sharesFor(revenue, cogs, expenses, date = '2026-10-05') {
+function sharesFor(revenue, purchases, expenses, date = '2026-10-05') {
   const days = F.dailyPL(
-    [{ date, qty: 1, total: revenue, total_cogs: cogs }],
+    [{ date, qty: 1, total: revenue }],
     expenses ? [{ date, category: 'Electricity', amount: expenses }] : [],
-    ['Electricity']
+    purchases ? [{ date, ingredient_name: 'Milk', total_cost: purchases }] : []
   );
   return F.computeShares(days, HISTORY, date, date);
 }
@@ -25,7 +25,7 @@ test('§71: ₹10,000 revenue − ₹4,000 costs → 1,200 / 1,200 / 3,600', () 
   assert.equal(rupees(r.partners.ishan.earned), 3600);
 });
 
-test('§74: daily — 8,500 rev, 3,200 COGS, 500 expenses → 4,800 → 960/960/2,880', () => {
+test('§74: daily — 8,500 sales, 3,200 purchases, 500 expenses → 4,800 → 960/960/2,880', () => {
   const r = sharesFor(8500, 3200, 500);
   assert.equal(rupees(r.partners.vivek.earned), 960);
   assert.equal(rupees(r.partners.ishan.earned), 2880);
@@ -39,7 +39,7 @@ test('§75: monthly — 1,50,000 / 55,000 / 15,000 → 80,000 → 16k/16k/48k, w
   assert.deepEqual(F.traceLines(r.partners.vivek), ['2026-10-05: ₹80,000.00 × 20% = ₹16,000.00']);
 });
 
-test('§87: 10 cappuccinos — 800 rev, 300 COGS, 100 expenses → 80/80/240', () => {
+test('§87: 10 cappuccinos — 800 sales, 300 purchases, 100 expenses → 80/80/240', () => {
   const r = sharesFor(800, 300, 100);
   assert.deepEqual(
     ['vivek', 'akash', 'ishan'].map((p) => rupees(r.partners[p].earned)),
@@ -47,19 +47,24 @@ test('§87: 10 cappuccinos — 800 rev, 300 COGS, 100 expenses → 80/80/240', (
   );
 });
 
-test('expenses outside agreed distributable categories are NOT subtracted', () => {
+test('profit = sales − purchases − expenses; every category counts and VOID rows are ignored', () => {
   const days = F.dailyPL(
-    [{ date: '2026-10-05', qty: 1, total: 1000, total_cogs: 0 }],
-    [{ date: '2026-10-05', category: 'Personal', amount: 500 }],
-    ['Electricity']
+    [{ date: '2026-10-05', qty: 1, total: 1000 }],
+    [{ date: '2026-10-05', category: 'Personal', amount: 500 }, { date: '2026-10-05', category: 'Other', amount: 99, status: 'VOID' }],
+    [{ date: '2026-10-05', total_cost: 200 }, { date: '2026-10-05', total_cost: 50, status: 'VOID' }]
   );
   const s = F.summarize(days, '2026-10-05', '2026-10-05');
-  assert.equal(rupees(s.distributable), 1000);
-  assert.equal(rupees(s.nonDistributableExpenses), 500);
+  assert.deepEqual([rupees(s.revenue), rupees(s.purchases), rupees(s.expenses), rupees(s.profit)], [1000, 200, 500, 300]);
+});
+
+test('amounts typed by hand in the sheet ("₹1,200", " 450 ") are read correctly', () => {
+  assert.equal(F.toPaise('₹1,200'), 120000);
+  assert.equal(F.toPaise(' 450.5 '), 45050);
+  assert.equal(F.toPaise(''), 0);
 });
 
 test('voided sales are ignored', () => {
-  const days = F.dailyPL([{ date: '2026-10-05', qty: 2, total: 160, total_cogs: 60, status: 'VOID' }], [], []);
+  const days = F.dailyPL([{ date: '2026-10-05', qty: 2, total: 160, status: 'VOID' }], [], []);
   assert.equal(F.summarize(days, '2026-10-01', '2026-10-31').revenue, 0);
 });
 
@@ -78,8 +83,8 @@ test('§80: ownership change mid-period uses the % in effect on each day', () =>
   const history = HISTORY.map((h) => ({ ...h, effective_to: '2026-12-31' })).concat(plan.add);
 
   const days = F.dailyPL([
-    { date: '2026-12-31', qty: 1, total: 1000, total_cogs: 0 },
-    { date: '2027-01-01', qty: 1, total: 1000, total_cogs: 0 },
+    { date: '2026-12-31', qty: 1, total: 1000 },
+    { date: '2027-01-01', qty: 1, total: 1000 },
   ], [], []);
   const r = F.computeShares(days, history, '2026-12-01', '2027-01-31');
   assert.equal(rupees(r.partners.vivek.earned), 200 + 250);
@@ -100,7 +105,7 @@ test('ownership change cannot back-date over current start', () => {
 });
 
 test('days before any ownership record are reported as unallocated', () => {
-  const days = F.dailyPL([{ date: '2026-09-30', qty: 1, total: 500, total_cogs: 0 }], [], []);
+  const days = F.dailyPL([{ date: '2026-09-30', qty: 1, total: 500 }], [], []);
   const r = F.computeShares(days, HISTORY, '2026-09-30', '2026-10-01');
   assert.equal(rupees(r.unallocated), 500);
 });

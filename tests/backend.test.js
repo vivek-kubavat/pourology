@@ -42,51 +42,83 @@ test('§81: finance actions reject anonymous, unknown and staff users server-sid
   assert.equal(app.call('setOwnership', { effective_from: '2027-01-01', rows: [] }, ISHAN).code, 'FORBIDDEN');
 });
 
-test('end-to-end: sale → COGS snapshot → expenses → partner earnings with trace', () => {
+test('end-to-end: sale − purchases − expenses → partner earnings 20/20/60 with trace', () => {
   const { app, ok } = freshApp();
-  const cat = ok('getCatalog', {}, ISHAN);
-  const capp = cat.items.find((i) => i.name === 'Dark Matter');
-  // seed recipe: 18g beans × ₹1.6 + shot cup ₹2 = ₹30.80
-  assert.equal(capp.unit_cogs, 30.8);
+  const darkMatter = ok('getCatalog', {}, ISHAN).items.find((i) => i.name === 'Dark Matter');
 
   ok('openStall', { opening_cash: 500 }, ISHAN);
-  const sale = ok('recordSale', { lines: [{ item_id: capp.item_id, qty: 10 }], payment_mode: 'UPI' }, ISHAN);
+  const sale = ok('recordSale', { lines: [{ item_id: darkMatter.item_id, qty: 10 }], payment_mode: 'UPI' }, ISHAN);
   assert.equal(sale.total, 800);
   ok('addExpense', { category: 'Electricity', amount: 100, description: 'Generator' }, ISHAN);
-
-  // A later purchase changes ingredient cost, but the recorded sale keeps its COGS snapshot.
-  ok('addPurchase', { ingredient_id: 'ING_beans', qty: 1000, total_cost: 2000 }, VIVEK);
-  assert.equal(ok('getCatalog', {}, ISHAN).items.find((i) => i.name === 'Dark Matter').unit_cogs, 38);
+  // stock purchase (adds inventory) and a plain item bought from business income
+  ok('addPurchase', { ingredient_id: 'ING_beans', qty: 100, total_cost: 200 }, VIVEK);
+  const cups = ok('addPurchase', { item: 'Paper cups', qty: 50, unit: 'pc', total_cost: 100 }, AKASH);
+  assert.equal(cups.ingredient_id, '');
+  assert.equal(cups.ingredient_name, 'Paper cups');
+  assert.equal(ok('getInventory', {}, VIVEK).find((i) => i.ingredient_id === 'ING_beans').purchased, 100);
 
   const e = ok('getPartnerEarnings', { period: 'TODAY' }, VIVEK);
-  assert.equal(e.business.revenue, 800);
-  assert.equal(e.business.cogs, 308);
-  assert.equal(e.business.other_expenses, 100);
-  assert.equal(e.business.distributable_profit, 392);
+  assert.deepEqual([e.business.revenue, e.business.purchases, e.business.expenses, e.business.profit], [800, 300, 100, 400]);
+  assert.equal(e.business.formula, 'Profit = Sales − Purchases − Expenses');
   const share = Object.fromEntries(e.distribution.map((d) => [d.partner_id, d.share]));
-  assert.deepEqual(share, { vivek: 78.4, akash: 78.4, ishan: 235.2 });
-  assert.equal(e.total_distributed, 392);
-  assert.match(e.distribution[0].trace[0], /₹392\.00 × 20% = ₹78\.40/);
+  assert.deepEqual(share, { vivek: 80, akash: 80, ishan: 240 });
+  assert.equal(e.total_distributed, 400);
+  assert.match(e.distribution[0].trace[0], /₹400\.00 × 20% = ₹80\.00/);
   assert.match(e.disclaimer, /Estimated \/ internal/);
+  assert.match(app.call('addPurchase', { total_cost: 50 }, VIVEK).error, /Item is required/);
+});
+
+test('investment is recorded per item and partner, tracked only (not subtracted from profit)', () => {
+  const { app, ok } = freshApp();
+  ok('addInvestment', { item: 'Moka pot (6 cup)', qty: 1, amount: 2400, paid_by: 'vivek', date: '2026-09-28' }, VIVEK);
+  ok('addInvestment', { item: 'V60 + server', amount: 1800, paid_by: 'akash' }, AKASH);
+  const wrong = ok('addInvestment', { item: 'Typo', amount: 99999, paid_by: 'akash' }, AKASH);
+  assert.match(app.call('addInvestment', { item: 'Kettle', amount: 900, paid_by: 'nobody' }, VIVEK).error, /who paid/);
+  assert.equal(app.call('voidInvestment', { investment_id: wrong.investment_id, reason: 'x' }, AKASH).code, 'FORBIDDEN');
+  ok('voidInvestment', { investment_id: wrong.investment_id, reason: 'Typo' }, VIVEK);
+
+  const inv = ok('listInvestments', {}, ISHAN);
+  assert.equal(inv.total, 4200);
+  assert.deepEqual(inv.by_partner.map((x) => [x.partner_id, x.amount]), [['vivek', 2400], ['akash', 1800], ['ishan', 0]]);
+  assert.equal(inv.rows.length, 3);
+
+  const darkMatter = ok('getCatalog', {}, ISHAN).items.find((i) => i.name === 'Dark Matter');
+  ok('recordSale', { lines: [{ item_id: darkMatter.item_id, qty: 10 }] }, ISHAN);
+  const e = ok('getPartnerEarnings', { period: 'ALL' }, AKASH);
+  assert.equal(e.business.profit, 800);
+  assert.equal(e.total_invested, 4200);
+  assert.equal(e.cumulative.find((c) => c.partner_id === 'vivek').invested, 2400);
+  assert.equal(ok('getMyShare', {}, AKASH).invested, 1800);
+  assert.ok(ok('listAudit', { entity: 'INVESTMENTS' }, VIVEK).some((a) => a.action === 'VOID_INVESTMENT'));
+});
+
+test('INVESTMENTS tab is created on first use in an existing live sheet, other tabs untouched', () => {
+  const { app, ok } = freshApp();
+  app.ss.sheets = app.ss.sheets.filter((sh) => sh.name !== 'INVESTMENTS'); // a sheet set up before this version
+  const before = app.ss.getSheetByName('PARTNERS').rows.length;
+  assert.deepEqual(ok('listInvestments', {}, VIVEK).rows, []);
+  ok('addInvestment', { item: 'Table', amount: 1500, paid_by: 'vivek' }, VIVEK);
+  assert.deepEqual(app.ss.getSheetByName('INVESTMENTS').rows[0].slice(0, 3), ['investment_id', 'date', 'item']);
+  assert.equal(app.ss.getSheetByName('PARTNERS').rows.length, before);
 });
 
 test('§77–78: withdrawals — partner can only withdraw own share, cannot exceed remaining; audited', () => {
   const { app, ok } = freshApp();
   const capp = ok('getCatalog', {}, ISHAN).items.find((i) => i.name === 'Dark Matter');
-  ok('recordSale', { lines: [{ item_id: capp.item_id, qty: 100 }] }, ISHAN); // revenue 8,000, cogs 3,080 → 4,920
+  ok('recordSale', { lines: [{ item_id: capp.item_id, qty: 100 }] }, ISHAN); // sales 8,000 → profit 8,000
 
   let my = ok('getMyShare', {}, AKASH);
-  assert.equal(my.total_earned, 984);
+  assert.equal(my.total_earned, 1600);
   assert.equal(my.status, 'PENDING');
 
   assert.match(app.call('recordWithdrawal', { partner_id: 'vivek', amount: 10 }, AKASH).error, /only record your own/);
   assert.match(app.call('recordWithdrawal', { partner_id: 'akash', amount: 5000 }, AKASH).error, /more than the remaining/);
 
   const w = ok('recordWithdrawal', { partner_id: 'akash', amount: 500, reason: 'Profit withdrawal' }, AKASH);
-  assert.deepEqual([w.earned, w.paid, w.remaining, w.status], [984, 500, 484, 'PARTIALLY_PAID']);
+  assert.deepEqual([w.earned, w.paid, w.remaining, w.status], [1600, 500, 1100, 'PARTIALLY_PAID']);
 
   my = ok('getMyShare', {}, AKASH);
-  assert.deepEqual([my.paid, my.remaining], [500, 484]);
+  assert.deepEqual([my.paid, my.remaining], [500, 1100]);
 
   // admin may record an advance explicitly
   ok('recordWithdrawal', { partner_id: 'akash', amount: 2000, allow_advance: true }, VIVEK);
@@ -116,38 +148,38 @@ test('§79–80: ownership must total 100%, keeps history, applies per period', 
 
   const e = ok('getPartnerEarnings', { period: 'MONTH' }, VIVEK);
   const v = e.distribution.find((d) => d.partner_id === 'vivek');
-  // each day: 800 − 308 = 492 → 20% = 98.40, then 25% = 123
+  // each day: 800 profit → 20% = 160, then 25% = 200
   assert.equal(v.ownership, '20% → 25%');
   assert.equal(v.trace.length, 2);
-  assert.equal(e.total_distributed, 984);
-  assert.equal(v.share, 221.4);
+  assert.equal(e.total_distributed, 1600);
+  assert.equal(v.share, 360);
 
   const audit = ok('listAudit', { entity: 'PARTNER_OWNERSHIP_HISTORY' }, VIVEK);
   assert.ok(audit.some((a) => a.action === 'CHANGE_OWNERSHIP'));
 });
 
-test('§86: only partner-agreed expense categories reduce distributable profit', () => {
-  const { ok } = freshApp();
+test('every recorded expense reduces profit; admin manages the category list', () => {
+  const { app, ok } = freshApp();
   ok('addExpense', { category: 'Marketing', amount: 300 }, VIVEK);
-  ok('setExpenseRules', { categories: ['Electricity', 'Marketing'], distributable: ['Electricity'] }, VIVEK);
+  ok('setExpenseRules', { categories: ['Electricity', 'Marketing', 'Ice'] }, VIVEK);
   const pl = ok('getPL', { period: 'TODAY' }, VIVEK);
-  assert.equal(pl.other_expenses, 0);
-  assert.equal(pl.non_distributable_expenses, 300);
-  assert.match(pl.formula, /Electricity/);
+  assert.deepEqual([pl.expenses, pl.profit], [300, -300]);
+  assert.deepEqual(ok('listExpenses', { period: 'TODAY' }, AKASH).categories, ['Electricity', 'Marketing', 'Ice']);
+  assert.equal(app.call('setExpenseRules', { categories: ['X'] }, AKASH).code, 'FORBIDDEN');
 });
 
 test('§85: profit report rows with FIFO paid/remaining/status and partner/status filters', () => {
   const { app, ok } = freshApp();
   const capp = ok('getCatalog', {}, ISHAN).items.find((i) => i.name === 'Dark Matter');
   ok('recordSale', { lines: [{ item_id: capp.item_id, qty: 100 }] }, ISHAN);
-  ok('recordWithdrawal', { partner_id: 'vivek', amount: 984 }, VIVEK);
+  ok('recordWithdrawal', { partner_id: 'vivek', amount: 1600 }, VIVEK);
   app.setToday('2026-11-03');
   ok('recordSale', { lines: [{ item_id: capp.item_id, qty: 100 }] }, ISHAN);
 
   const rep = ok('getProfitReport', { period: 'CUSTOM', from: '2026-10-01', to: '2026-11-03', group_by: 'month', partner_id: 'vivek' }, AKASH);
   assert.deepEqual(rep.rows.map((r) => [r.period, r.share, r.paid, r.remaining, r.status]), [
-    ['2026-10', 984, 984, 0, 'PAID'],
-    ['2026-11', 984, 0, 984, 'PENDING'],
+    ['2026-10', 1600, 1600, 0, 'PAID'],
+    ['2026-11', 1600, 0, 1600, 'PENDING'],
   ]);
   const pending = ok('getProfitReport', { period: 'ALL', status: 'PENDING' }, AKASH);
   assert.ok(pending.rows.every((r) => r.status === 'PENDING'));
@@ -160,7 +192,7 @@ test('closing a period snapshots PARTNER_DISTRIBUTIONS and blocks back-dated own
   app.setToday('2026-11-02');
   const snap = ok('closePeriod', { from: '2026-10-01', to: '2026-10-31' }, VIVEK);
   assert.equal(snap.length, 3);
-  assert.equal(snap.find((s) => s.partner_id === 'ishan').calculated_share, 295.2);
+  assert.equal(snap.find((s) => s.partner_id === 'ishan').calculated_share, 480);
   assert.match(app.call('closePeriod', { from: '2026-10-15', to: '2026-10-20' }, VIVEK).error, /overlaps/);
   assert.match(app.call('setOwnership', { effective_from: '2026-10-20', rows: [{ partner_id: 'ishan', percentage: 100 }] }, VIVEK).error, /already closed/);
   const list = ok('listDistributions', {}, VIVEK);
@@ -203,7 +235,7 @@ test('junk tokens are rejected locally without calling Google, and failures are 
   assert.equal(fetches, 0);
 });
 
-test('staff only see today and never revenue; partners cannot push fake purchase prices', () => {
+test('staff only see today and never revenue', () => {
   const { app, ok } = freshApp();
   ok('saveUser', { email: 'staff@gmail.com', name: 'Staff', role: 'STAFF' }, VIVEK);
   const item = ok('getCatalog', {}, 'staff@gmail.com').items[0];
@@ -211,9 +243,6 @@ test('staff only see today and never revenue; partners cannot push fake purchase
   const s = ok('listSales', { period: 'ALL' }, 'staff@gmail.com');
   assert.equal(s.totals.revenue, undefined);
   assert.equal(s.range.from, '2026-10-05');
-  // beans cost ₹1.6/g; a partner claiming ₹0.0001/g is blocked, admin can override
-  assert.match(app.call('addPurchase', { ingredient_id: 'ING_beans', qty: 1e6, total_cost: 100 }, AKASH).error, /more than 50%/);
-  ok('addPurchase', { ingredient_id: 'ING_beans', qty: 1000, total_cost: 1700 }, AKASH);
 });
 
 test('closed periods are locked: no back-dated expenses, voids or ownership changes', () => {
@@ -221,6 +250,7 @@ test('closed periods are locked: no back-dated expenses, voids or ownership chan
   app.setToday('2026-11-02');
   ok('closePeriod', { from: '2026-10-01', to: '2026-10-31' }, VIVEK);
   assert.match(app.call('addExpense', { category: 'Other', amount: 50, date: '2026-10-15' }, VIVEK).error, /closed/);
+  assert.match(app.call('addPurchase', { item: 'Milk', total_cost: 50, date: '2026-10-15' }, VIVEK).error, /closed/);
   assert.match(app.call('setOwnership', { effective_from: '2026-11-01', rows: [
     { partner_id: 'vivek', percentage: 30 }, { partner_id: 'akash', percentage: 10 }, { partner_id: 'ishan', percentage: 60 }] }, VIVEK).error, /in the past/);
 });

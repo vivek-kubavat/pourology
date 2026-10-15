@@ -1,7 +1,8 @@
 {
-  "name": "Pourology",
-  "short_name": "Pourology",
-  "description": "Pourology Coffee Lab — sales, inventory and partner profit sharing",
+  "id": "./index.html",
+  "name": "Pourology Partners",
+  "short_name": "Po Partners",
+  "description": "Pourology Coffee Lab: sales, purchases, investment and partner profit sharing",
   "start_url": "./index.html",
   "scope": "./",
   "display": "standalone",
