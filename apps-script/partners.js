@@ -1,7 +1,9 @@
 /**
  * Business P&L and partner profit sharing (spec §70–90).
- * Everything here is derived on each request from SALES, EXPENSES, PARTNER_OWNERSHIP_HISTORY and
- * PARTNER_WITHDRAWALS — partner earnings are never typed in or stored as running totals.
+ * Everything here is derived on each request from SALES, PURCHASES, EXPENSES, PARTNER_OWNERSHIP_HISTORY
+ * and PARTNER_WITHDRAWALS — partner earnings are never typed in or stored as running totals.
+ * Profit = Sales − Purchases − Expenses, split by ownership % (20 / 20 / 60). INVESTMENTS are tracked
+ * per partner but are not part of profit.
  */
 const DISCLAIMER = 'Estimated / internal profit share for partner reference only. Not a substitute for a ' +
   'chartered accountant, GST/tax filing, formal financial statements or the partnership agreement.';
@@ -11,27 +13,37 @@ const R = (paise) => FinanceCore.fromPaise(paise);
 function loadFinance_() {
   const sales = readAll_('SALES');
   const expenses = readAll_('EXPENSES');
+  const purchases = readAll_('PURCHASES');
   const history = readAll_('PARTNER_OWNERSHIP_HISTORY');
   const partners = readAll_('PARTNERS');
   const withdrawals = readAll_('PARTNER_WITHDRAWALS');
-  const dist = distributableCategories_();
-  const days = FinanceCore.dailyPL(sales, expenses, dist);
+  const days = FinanceCore.dailyPL(sales, expenses, purchases);
   const candidates = [today_()]
-    .concat(sales.map((s) => s.date), expenses.map((e) => e.date), history.map((h) => h.effective_from))
+    .concat(sales.map((s) => s.date), expenses.map((e) => e.date), purchases.map((x) => x.date), history.map((h) => h.effective_from))
     .filter(FinanceCore.isYmd);
   const startDate = candidates.reduce((a, b) => (b < a ? b : a));
   const paid = {};
   withdrawals.forEach((w) => { if (w.status !== 'VOID') paid[w.partner_id] = (paid[w.partner_id] || 0) + FinanceCore.toPaise(w.amount); });
-  return { days, history, partners, withdrawals, paid, dist, startDate, today: today_() };
+  return { days, history, partners, withdrawals, paid, startDate, today: today_() };
 }
 
-function plOut_(s, dist) {
+function plOut_(s) {
   return {
-    revenue: R(s.revenue), cogs: R(s.cogs), gross_profit: R(s.grossProfit), other_expenses: R(s.expenses),
-    non_distributable_expenses: R(s.nonDistributableExpenses), distributable_profit: R(s.distributable),
-    cups: s.cups, orders: s.orders, distributable_categories: dist,
-    formula: 'Distributable profit = Revenue − COGS − Other expenses (' + (dist.length ? dist.join(', ') : 'none selected') + ')',
+    revenue: R(s.revenue), purchases: R(s.purchases), expenses: R(s.expenses), profit: R(s.profit),
+    distributable_profit: R(s.profit), // same figure; name kept for PARTNER_DISTRIBUTIONS and CSV exports
+    cups: s.cups, orders: s.orders,
+    formula: 'Profit = Sales − Purchases − Expenses',
   };
+}
+
+/** Investment put in by each partner (setup items before opening). Tracked only, not part of profit. */
+function investmentByPartner_() {
+  const out = {};
+  readAll_('INVESTMENTS').forEach((x) => {
+    if (x.status === 'VOID') return;
+    out[x.paid_by] = (out[x.paid_by] || 0) + FinanceCore.toPaise(x.amount);
+  });
+  return out;
 }
 
 function partnerName_(f, id) {
@@ -67,7 +79,7 @@ function balance_(f, all, id) {
 function getPL(user, p) {
   const f = loadFinance_();
   const range = resolveRange_(p, f.startDate);
-  return Object.assign({ range: range }, plOut_(FinanceCore.summarize(f.days, range.from, range.to), f.dist));
+  return Object.assign({ range: range }, plOut_(FinanceCore.summarize(f.days, range.from, range.to)));
 }
 
 /** §73–76, §84: business profit, distribution for the selected period, cumulative table, with calculation trace. */
@@ -81,6 +93,7 @@ function getPartnerEarnings(user, p) {
   const current = FinanceCore.ownershipOn(f.history, f.today);
   const currentPct = (id) => { const c = current.find((x) => x.partner_id === id); return c ? c.percentage : 0; };
   const ids = partnerIds_(f);
+  const invested = investmentByPartner_();
 
   const distribution = ids.map((id) => {
     const r = period.partners[id];
@@ -91,13 +104,14 @@ function getPartnerEarnings(user, p) {
     const m = monthShares.partners[id];
     return {
       partner_id: id, name: partnerName_(f, id), ownership: currentPct(id), this_month: R(m ? m.earned : 0),
-      total_earned: R(b.earned), paid: R(b.paid), remaining: R(b.remaining), status: b.status,
+      total_earned: R(b.earned), paid: R(b.paid), remaining: R(b.remaining), status: b.status, invested: R(invested[id] || 0),
     };
   });
   const summary = FinanceCore.summarize(f.days, range.from, range.to);
   return {
     range: range,
-    business: plOut_(summary, f.dist),
+    business: plOut_(summary),
+    total_invested: R(Object.keys(invested).reduce((t, k) => t + invested[k], 0)),
     distribution: distribution,
     total_distributed: R(distribution.reduce((s, d) => s + FinanceCore.toPaise(d.share), 0)),
     unallocated_profit: R(period.unallocated),
@@ -113,8 +127,8 @@ function getMyShare(user) {
   const today = FinanceCore.periodRange('TODAY', f.today);
   const month = FinanceCore.periodRange('MONTH', f.today);
   const business = {
-    today: plOut_(FinanceCore.summarize(f.days, today.from, today.to), f.dist),
-    month: plOut_(FinanceCore.summarize(f.days, month.from, month.to), f.dist),
+    today: plOut_(FinanceCore.summarize(f.days, today.from, today.to)),
+    month: plOut_(FinanceCore.summarize(f.days, month.from, month.to)),
   };
   if (!user.partner_id) return { partner: null, business: business, disclaimer: DISCLAIMER };
 
@@ -128,6 +142,7 @@ function getMyShare(user) {
     today_share: R(t ? t.earned : 0), today_trace: FinanceCore.traceLines(t),
     month_share: R(m ? m.earned : 0), month_trace: FinanceCore.traceLines(m),
     total_earned: R(b.earned), paid: R(b.paid), remaining: R(b.remaining), status: b.status,
+    invested: R(investmentByPartner_()[id] || 0),
     business: business, disclaimer: DISCLAIMER,
   };
 }
@@ -166,7 +181,7 @@ function getProfitReport(user, p) {
       const a = fifo.periods[i];
       rows.push({
         period: c.b.key, from: c.b.from, to: c.b.to,
-        revenue: R(c.pl.revenue), cogs: R(c.pl.cogs), expenses: R(c.pl.expenses), distributable_profit: R(c.pl.distributable),
+        revenue: R(c.pl.revenue), purchases: R(c.pl.purchases), expenses: R(c.pl.expenses), distributable_profit: R(c.pl.profit),
         partner_id: id, partner: partnerName_(f, id), ownership: pctLabel_(c.shares.partners[id]),
         share: R(a.earned), paid: R(a.paid), remaining: R(a.remaining), status: a.status,
       });
@@ -300,7 +315,7 @@ function closePeriod(user, p) {
     const a = FinanceCore.allocateWithdrawalsFIFO(periods, f.paid[id] || 0).periods.pop();
     return {
       distribution_id: newId_('DST'), period_start: p.from, period_end: p.to, partner_id: id,
-      ownership_percentage: pctLabel_(shares.partners[id]), distributable_profit: R(pl.distributable),
+      ownership_percentage: pctLabel_(shares.partners[id]), distributable_profit: R(pl.profit),
       calculated_share: R(a.earned), paid_amount: R(a.paid), remaining_amount: R(a.remaining),
       status: a.status === 'NO_PROFIT' ? 'PAID' : a.status, created_at: now, created_by: user.email,
     };

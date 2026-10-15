@@ -4,46 +4,140 @@
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <title>Pourology Menu</title>
-  <meta name="description" content="Pourology Coffee Lab, Ahmedabad: pour-over and moka coffee, brewed to order.">
-  <meta name="theme-color" content="#3b2414">
+  <meta name="description" content="Pourology Coffee Lab, Ahmedabad: pour-over, moka and filter coffee, brewed to order.">
+  <meta name="theme-color" content="#2b1a10">
   <meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self'; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; font-src https://fonts.gstatic.com; img-src 'self' data:; connect-src 'self' https://script.google.com https://script.googleusercontent.com; object-src 'none'; base-uri 'none'; form-action 'none'">
   <link rel="icon" href="icons/favicon-64.png" type="image/png">
-  <link rel="apple-touch-icon" href="icons/icon-192.png">
+  <link rel="apple-touch-icon" href="icons/menu-192.png">
   <link rel="manifest" href="menu.webmanifest">
-  <meta name="apple-mobile-web-app-title" content="Pourology">
+  <meta name="apple-mobile-web-app-title" content="Po Menu">
   <meta name="apple-mobile-web-app-capable" content="yes">
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=DM+Sans:opsz,wght@9..40,400;9..40,500;9..40,700&family=Fraunces:ital,opsz,wght@0,9..144,600;1,9..144,500&display=swap">
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Caveat:wght@500;600&family=DM+Sans:opsz,wght@9..40,400;9..40,500;9..40,700&family=Playfair+Display:ital,wght@0,500;0,700;1,700&family=Source+Serif+4:opsz,wght@8..60,400;8..60,600&display=swap">
   <link rel="stylesheet" href="styles.css">
   <style>
-    /* The printed menu is always cream, so this page keeps its light palette in dark mode too. */
-    body { background: var(--cream); color: var(--espresso); }
-    .mp { max-width: 980px; margin: 0 auto; padding: 28px 16px 48px; }
-    .mp-head { display: flex; justify-content: space-between; align-items: center; gap: 12px; }
-    .mp-head .brand { gap: 14px; }
-    .mp-head .wordmark b { font-size: 2rem; }
-    .mp-head .wordmark small { font-size: .7rem; color: var(--teal-deep); }
-    .city { font-size: .75rem; letter-spacing: .3em; color: var(--teal-deep); }
-    .tagline { font-family: var(--font-display); font-style: italic; font-weight: 500; font-size: clamp(2.6rem, 9vw, 4.6rem); line-height: 1; margin: 22px 0 26px; letter-spacing: -.02em; }
-    .cats { display: grid; gap: 18px; grid-template-columns: repeat(auto-fit, minmax(290px, 1fr)); }
-    .cat { border-radius: 34px; padding: 26px 24px 22px; background: var(--surface-2); color: var(--espresso); display: flex; flex-direction: column; }
-    .cat.teal { background: var(--teal); } .cat.peach { background: var(--peach); }
-    .cat h2 { font-size: 2rem; margin: 0; }
-    .cat .sub { margin: 2px 0 14px; font-size: .92rem; }
-    .item { margin: 10px 0 6px; }
-    .item-top { display: flex; justify-content: space-between; align-items: baseline; gap: 12px; }
-    .item h3 { font-size: 1.35rem; margin: 0; }
-    .item .price { font-family: var(--font-display); font-size: 1.35rem; font-weight: 600; white-space: nowrap; }
-    .item p { margin: 4px 0 0; font-size: .92rem; line-height: 1.45; }
-    .cat .foot { margin-top: auto; padding-top: 14px; font-size: .72rem; letter-spacing: .3em; text-transform: uppercase; }
-    .adds { margin-top: 18px; border: 1.5px solid var(--teal-deep); border-radius: 26px; padding: 18px 22px; }
-    .adds .eyebrow { color: var(--teal-deep); }
-    .adds ul { list-style: none; margin: 10px 0 0; padding: 0; display: flex; flex-wrap: wrap; gap: 8px 28px; font-size: 1.02rem; }
-    .adds li::before { content: ""; display: inline-block; width: 9px; height: 9px; border-radius: 50%; margin-right: 9px; background: var(--dot, var(--teal)); }
-    .mp-foot { margin-top: 26px; font-size: .75rem; letter-spacing: .25em; color: var(--teal-deep); text-transform: uppercase; }
+    /* The menu is a printed-style parchment sheet, so it keeps this light palette in dark mode too. */
+    :root { --paper: #f4ecdc; --ink: #2b1a10; --menu-teal: #1d6b68; --rule: #bfae93; --espresso: #2b1a10; --line: #d9c9ac; --muted: #6b5442;
+      --font-display: "Playfair Display", Georgia, "Times New Roman", serif; --font-item: "Source Serif 4", Georgia, serif; --font-hand: "Caveat", "Segoe Script", "Bradley Hand", cursive; color-scheme: light; }
+    body { color: var(--ink); background-color: var(--paper);
+      background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='180' height='180'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='.85' numOctaves='2' stitchTiles='stitch'/%3E%3CfeColorMatrix values='0 0 0 0 .42 0 0 0 0 .3 0 0 0 0 .16 .2 0 0 0 0'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E"),
+        radial-gradient(ellipse at 15% 0%, #fbf5e8 0, transparent 55%), radial-gradient(ellipse at 100% 60%, #ecdfc6 0, transparent 60%); }
+    .mp { max-width: 1024px; margin: 0 auto; padding-bottom: 48px; }
+    .extras { padding: 0 16px; }
+    .hand { font-family: var(--font-hand); fill: var(--ink); }
+
+    /* ---- The poster. Every size is in em: 1em = 1/64 of the sheet width, so from 700px up the whole
+       sheet scales as one piece, exactly like the printed menu (16px type at 1024px wide). ---- */
+    .poster { position: relative; overflow: hidden; font-size: min(100vw / 64, 16px); padding: 4.3em 2.8em 2.6em; }
+    .poster > * { position: relative; z-index: 1; }
+    .poster > .deco { position: absolute; z-index: 0; pointer-events: none; }
+    svg.deco { display: block; height: auto; overflow: visible; }
+    .deco svg { display: block; height: auto; overflow: visible; }
+    .branch.tl { top: -4.4em; left: -10.6em; width: 25em; transform: rotate(-18deg); }
+    .branch.tl2 { top: 6em; left: -9.4em; width: 15em; transform: rotate(-62deg); }
+    .leaf1 { top: -3em; left: 8.5em; width: 11em; transform: rotate(-8deg); }
+    .leaf2 { top: 18em; left: -6.5em; width: 11em; transform: rotate(62deg); }
+    .leaf3 { top: 59.5em; right: -5em; width: 11em; transform: rotate(-38deg); }
+    .branch.br { bottom: -4.6em; right: -5.4em; width: 19em; transform: rotate(180deg); }
+    .cherries { bottom: 3.4em; left: -1.6em; width: 6em; }
+    .cup { top: 16.2em; right: -6.4em; width: 12em; }
+    .bean { width: 2.9em; }
+    .jot { font-family: var(--font-hand); font-size: 1.5em; line-height: 1.02; text-align: center; white-space: nowrap; }
+    .jot svg { width: 1.7em; margin: .2em auto 0; }
+    .n1 { top: 5.6em; left: 2.1em; transform: rotate(-17deg); } .n1 svg { margin-left: 1.2em; }
+    .n2 { top: 2.1em; right: 2.4em; transform: rotate(-17deg); letter-spacing: .12em; font-size: 1.4em; } .n2 svg { width: 4.6em; margin: .1em 0 0 1.2em; }
+    .n3 { top: 8.3em; right: 1.6em; transform: rotate(-13deg); } .n3 svg { margin: .3em 0 0 4.2em; }
+    .b1 { top: 16.2em; left: 9.4em; transform: rotate(-58deg); } .b2 { top: 15.3em; left: 12em; transform: rotate(28deg); width: 2.6em; }
+    .b3 { top: 21.6em; right: 5.6em; transform: rotate(64deg); } .b4 { top: 32em; right: 1.2em; transform: rotate(-72deg); width: 2.5em; }
+    .b5 { top: 37.2em; right: 2.3em; transform: rotate(-66deg); width: 2.5em; } .b6 { top: 38.2em; right: .2em; transform: rotate(-80deg); width: 2em; }
+    .b7 { top: 41.2em; right: 1.8em; transform: rotate(28deg); width: 2.9em; } .b8 { top: 52.6em; right: .9em; transform: rotate(-48deg); }
+    .b9 { top: 67em; right: .9em; transform: rotate(-80deg); width: 2.6em; } .b10 { top: 72.5em; right: 1em; transform: rotate(18deg); width: 2.9em; }
+    .b11 { top: 41.4em; left: .6em; transform: rotate(22deg); width: 2.7em; } .b12 { top: 39.6em; left: -.9em; transform: rotate(-40deg); width: 2em; }
+    /* Header */
+    .hero { display: flex; align-items: center; justify-content: center; gap: 2.2em; margin: 0 0 0 1.4em; }
+    .tile { flex: none; position: relative; display: grid; place-items: center; width: 9em; height: 8.9em; border-radius: .7em; background: #2a160c; color: #f6ead3; }
+    .tile i { position: absolute; top: .75em; left: .95em; font-style: normal; font-size: 1.22em; color: #e2ad45; }
+    .tile b { font-family: var(--font-display); font-weight: 700; font-size: 5.2em; line-height: 1; }
+    .tile small { position: absolute; bottom: 1.15em; left: 0; right: 0; text-align: center; font-size: .82em; letter-spacing: .26em; padding-left: .26em; color: #e2ad45; }
+    .title { display: grid; line-height: 1; }
+    .title h1 { font-size: 4.75em; font-weight: 700; letter-spacing: -.02em; margin: 0; line-height: .95; }
+    .title small { font-size: 1.6em; letter-spacing: .38em; color: var(--menu-teal); margin: .45em 0 .4em; font-weight: 500; }
+    .title em { font-family: var(--font-display); font-weight: 700; font-size: 2.1em; }
+    .hero-note { display: none; }
+    .ourmenu { text-align: center; margin: 2.3em 0 1.5em; }
+    .ourmenu b { display: flex; align-items: center; justify-content: center; gap: 1.1em; font-weight: 500; font-size: 1.95em; letter-spacing: .3em; padding-left: .3em; line-height: 1.2; }
+    .ourmenu b::before, .ourmenu b::after { content: ""; width: 2.9em; height: 1px; background: var(--ink); }
+    .ourmenu small { display: block; margin-top: .7em; font-size: .86em; letter-spacing: .36em; color: var(--menu-teal); }
+    #menu > .loading, #menu > .muted, .offline { font-size: 15px; justify-content: center; text-align: center; }
+    /* Sections: artwork on the left, heading and rows on the right */
+    .sec { position: relative; display: grid; grid-template-columns: 16.75em 1fr; grid-template-areas: "art head" "art rows"; grid-template-rows: auto 1fr; column-gap: 1.5em; padding-right: 2.5em; margin-bottom: 1.5em; }
+    .sec.pours { z-index: 2; }
+    .sec.pour .art { margin-top: -5.4em; }
+    .sec.noart { grid-template-areas: ". head" ". rows"; }
+    .sec .art { grid-area: art; align-self: start; margin: -.4em 0 0 -1.8em; }
+    .sec .art svg { display: block; width: 18.5em; height: auto; overflow: visible; }
+    .stream { display: none; } .sec.pour .stream { display: inline; }
+    .sec-head { grid-area: head; display: flex; align-items: center; gap: 1.4em; padding-bottom: .75em; }
+    .sec-head h2 { font-size: 2.4em; font-weight: 700; text-transform: uppercase; letter-spacing: 0; margin: 0; line-height: 1.1; }
+    .sec-head p { margin: 0; padding-left: 1.9em; border-left: 1px solid var(--rule); font-size: .74em; letter-spacing: .32em; text-transform: uppercase; line-height: 1.6; }
+    .rows { grid-area: rows; align-self: start; border-top: 1px solid var(--ink); border-bottom: 1px solid var(--menu-teal); }
+    .row { display: grid; grid-template-columns: minmax(14.3em, max-content) 1fr 3.9em; grid-template-areas: "nm desc price"; column-gap: .9em; padding: .82em 0; align-items: center; border-bottom: 1px solid var(--rule); }
+    .row:last-child { border-bottom: 0; }
+    .row .nm { grid-area: nm; }
+    .row h3 { font-family: var(--font-item); font-size: 1.62em; font-weight: 600; margin: 0; letter-spacing: -.02em; line-height: 1.15; white-space: nowrap; }
+    .row .alt { display: block; font-family: var(--font-item); font-weight: 400; color: var(--menu-teal); font-size: 1.08em; margin-top: .2em; line-height: 1.3; }
+    .row p { grid-area: desc; margin: 0; font-size: .97em; line-height: 1.36; padding-left: 1.15em; border-left: 1px solid var(--rule); }
+    .row .price { grid-area: price; align-self: start; text-align: right; font-size: 1.62em; font-weight: 500; white-space: nowrap; line-height: 1.25; }
+    /* Add-ons */
+    .adds { display: grid; grid-template-columns: 9.2em repeat(var(--n, 4), 1fr); align-items: center; border: 1.5px solid var(--ink); border-radius: 1.5em; padding: .5em 1.6em .9em; margin-top: .6em; }
+    .adds-h { text-align: center; }
+    .adds-h b { display: block; font-family: var(--font-display); font-weight: 700; font-size: 1.75em; letter-spacing: .14em; line-height: 1.12; }
+    .adds-h small { display: block; font-size: .78em; letter-spacing: .26em; text-transform: uppercase; margin-top: .6em; font-weight: 500; }
+    .add { position: relative; text-align: center; font-family: var(--font-display); font-weight: 500; font-size: 1.12em; line-height: 1.2; }
+    .add + .add::before { content: ""; position: absolute; left: 0; top: 22%; height: 46%; border-left: 1px solid var(--rule); }
+    .add svg { display: block; width: 5.8em; height: 5.8em; margin: 0 auto .35em; padding: .95em; border: 1px solid var(--ink); border-radius: 50%; background: #fbf5e8; }
+    .add small { display: block; font-family: var(--font-body); font-size: .8em; }
+    /* Footer */
+    .foot { display: flex; align-items: center; justify-content: center; margin-top: 1.4em; }
+    .foot .links { display: flex; align-items: stretch; }
+    .foot .links a { display: grid; justify-items: center; align-content: center; gap: .35em; padding: .2em 1.25em; color: var(--ink); text-decoration: none; font-size: .9em; white-space: nowrap; border-left: 1px solid var(--rule); }
+    .foot .links a svg { width: 2.4em; height: 2.4em; }
+    .foot .links a:first-child { border-left: 0; }
+    .foot .city { align-self: stretch; display: grid; align-content: center; margin-left: 1.6em; padding-left: 2.8em; border-left: 1px solid var(--rule); font-size: .8em; letter-spacing: .42em; color: var(--menu-teal); }
+    .foot .city::after { content: ""; display: block; width: 6em; height: 1px; background: var(--menu-teal); margin: .9em 0 0 1.4em; }
+    .mp-foot { margin-top: 26px; font-size: .72rem; letter-spacing: .25em; color: var(--menu-teal); text-transform: uppercase; text-align: center; }
+
+    /* ---- Phones: same sheet, but the type stays readable, so each drink stacks name+price over its description ---- */
+    @media (max-width: 699px) {
+      .poster { font-size: min(100vw / 23.4, 18px); padding: 1.4em 1em 1.4em; }
+      .wide-only { display: none !important; }
+      .branch.tl { top: -1.6em; left: -2.6em; width: 8.4em; } .leaf1 { top: -1.5em; left: 5.4em; width: 5em; }
+      .poster > .bean { display: none; }
+      .hero { font-size: .5em; margin: 2.6em 0 0; gap: 1.8em; }
+      .hero-note { display: block; font-family: var(--font-hand); font-size: 1.15em; text-align: center; margin: .9em 0 0; transform: rotate(-2deg); }
+      .ourmenu { font-size: .62em; margin: 2.2em 0 2.6em; }
+      .sec { grid-template-columns: 6.3em 1fr; column-gap: .7em; padding-right: 0; margin-bottom: 1.6em; }
+      .sec .art { margin: 0 0 0 -.6em; } .sec .art svg { width: 7em; }
+      .sec.pour .stream { display: none; } .sec.pour .art { margin-top: 0; }
+      .sec-head { display: block; padding-bottom: .5em; }
+      .sec-head h2 { font-size: 1.62em; }
+      .sec-head p { font-size: .56em; padding: 0; border: 0; margin-top: .5em; letter-spacing: .26em; }
+      .row { grid-template-columns: 1fr auto; grid-template-areas: "nm price" "desc desc"; gap: .35em .6em; padding: .8em 0; }
+      .row h3 { font-size: 1.24em; white-space: normal; } .row .alt { font-size: .9em; }
+      .row p { font-size: .84em; padding: 0; border: 0; line-height: 1.42; }
+      .row .price { font-size: 1.22em; }
+      .adds { grid-template-columns: repeat(var(--n, 4), 1fr); padding: .8em .3em .9em; row-gap: .7em; border-radius: 1.3em; }
+      .adds-h { grid-column: 1 / -1; } .adds-h b { display: inline; font-size: 1.3em; } .adds-h b br { display: none; }
+      .adds-h small { display: inline; margin-left: .8em; font-size: .68em; }
+      .add { font-size: .8em; padding: 0 .2em; } .add svg { width: 4.6em; height: 4.6em; padding: .75em; }
+      .foot { flex-wrap: wrap; justify-content: center; row-gap: 1.1em; margin-top: 1.4em; }
+          .foot .links { flex-basis: 100%; justify-content: center; margin: 0; }
+      .foot .links a { flex: 1 1 0; font-size: .78em; padding: .2em .4em; } .foot .links a:first-child { border-left: 0; }
+      .foot .city { flex-basis: 100%; margin: 0; padding: 0; border: 0; text-align: center; font-size: .7em; } .foot .city::after { margin: .7em auto 0; }
+    }
     /* Find us */
-    .findus { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 10px 16px; background: #fff9ee; border: 1.5px solid var(--line); border-radius: 22px; padding: 14px 18px; margin: -6px 0 22px; }
+    .findus { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 10px 16px; background: #fff9ee; border: 1.5px solid var(--line); border-radius: 22px; padding: 14px 18px; margin: 26px 0 0; }
     .findus b { font-family: var(--font-display); font-size: 1.15rem; }
     .findus .muted { font-size: .85rem; }
     /* Porter delivery */
@@ -64,19 +158,19 @@
     .cbtn.gold { background: var(--gold); color: var(--espresso); }
     .cbtn svg { width: 18px; height: 18px; flex: none; }
     /* Install */
-    .install { margin-top: 18px; display: flex; flex-wrap: wrap; align-items: center; gap: 14px; border: 1.5px dashed var(--teal-deep); border-radius: 22px; padding: 16px 18px; }
+    .install { background: #fbf5e8; margin-top: 18px; display: flex; flex-wrap: wrap; align-items: center; gap: 14px; border: 1.5px dashed var(--teal-deep); border-radius: 22px; padding: 16px 18px; }
     .install img { border-radius: 12px; }
     .install div { flex: 1 1 200px; }
     .install b { font-family: var(--font-display); font-size: 1.1rem; }
     .install p { margin: 2px 0 0; font-size: .88rem; color: #6b5442; }
     .ios-steps { margin: 10px 0 0; font-size: .9rem; }
     /* Sticky one-tap bar (phones) */
-    .actionbar { position: fixed; left: 0; right: 0; bottom: 0; z-index: 10; display: flex; gap: 8px; padding: 10px 12px max(10px, env(safe-area-inset-bottom)); background: rgb(255 244 224 / 94%); backdrop-filter: blur(8px); border-top: 1px solid var(--line); }
+    .actionbar { position: fixed; left: 0; right: 0; bottom: 0; z-index: 10; display: flex; gap: 8px; padding: 10px 12px max(10px, env(safe-area-inset-bottom)); background: rgb(244 236 220 / 94%); backdrop-filter: blur(8px); border-top: 1px solid var(--line); }
     .actionbar .cbtn { flex: 1; padding: 11px 8px; font-size: .9rem; }
     body.has-bar .mp { padding-bottom: 96px; }
-    @media (min-width: 760px) { .actionbar { position: static; background: none; border: 0; padding: 0; margin: 0 0 22px; backdrop-filter: none; } .actionbar .cbtn { flex: 0 1 auto; padding: 11px 20px; } body.has-bar .mp { padding-bottom: 48px; } }
+    @media (min-width: 700px) { .actionbar { display: none; } body.has-bar .mp { padding-bottom: 56px; } }
     /* Top install banner */
-    .install-top { display: flex; align-items: center; gap: 12px; background: var(--espresso); color: var(--cream); border-radius: 18px; padding: 10px 10px 10px 12px; margin: -8px 0 20px; }
+    .install-top { position: relative; z-index: 2; display: flex; align-items: center; gap: 12px; background: var(--espresso); color: var(--cream); border-radius: 18px; padding: 10px 10px 10px 12px; margin: 14px 16px 0; }
     .install-top img { border-radius: 9px; flex: none; }
     .install-top div { flex: 1; min-width: 0; line-height: 1.25; }
     .install-top b { display: block; font-size: .95rem; }
@@ -85,24 +179,71 @@
     .install-top .x { background: none; border: 0; color: var(--cream); font-size: 1.3rem; line-height: 1; padding: 4px 6px; cursor: pointer; opacity: .7; }
     .install-top .steps { flex-basis: 100%; font-size: .85rem; margin: 6px 0 2px; }
     .install-top.open { flex-wrap: wrap; }
-    .offline { font-size: .8rem; color: #6b5442; margin: -14px 0 18px; }
-    @media (max-width: 480px) { .mp-head .wordmark b { font-size: 1.6rem; } .cat { border-radius: 28px; padding: 22px 18px; } }
+    .offline { font-size: .8rem; color: #6b5442; margin: 0 0 14px; text-align: center; }
   </style>
 </head>
 <body>
+  <svg width="0" height="0" style="position:absolute" aria-hidden="true">
+    <defs>
+      <filter id="wob" x="-5%" y="-5%" width="110%" height="110%"><feTurbulence type="fractalNoise" baseFrequency=".03" numOctaves="2" seed="4" result="t"/><feDisplacementMap in="SourceGraphic" in2="t" scale="2.6"/></filter>
+      <filter id="grain" x="0" y="0" width="100%" height="100%"><feTurbulence type="fractalNoise" baseFrequency=".05 .9" numOctaves="3" seed="2" result="n"/><feColorMatrix in="n" values="0 0 0 0 0  0 0 0 0 0  0 0 0 0 0  0 0 0 1.1 -.42" result="a"/><feComposite in="a" in2="SourceAlpha" operator="in" result="d"/><feMerge><feMergeNode in="SourceGraphic"/><feMergeNode in="d"/></feMerge></filter>
+      <filter id="wash" x="-20%" y="-80%" width="140%" height="260%"><feTurbulence type="fractalNoise" baseFrequency=".035" numOctaves="3" seed="9" result="t"/><feDisplacementMap in="SourceGraphic" in2="t" scale="16"/><feGaussianBlur stdDeviation=".7"/></filter>
+      <linearGradient id="g-leaf" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#4f6f45"/><stop offset=".5" stop-color="#2f4a30"/><stop offset="1" stop-color="#1c2f1f"/></linearGradient>
+      <radialGradient id="g-bean" cx=".35" cy=".3" r=".8"><stop offset="0" stop-color="#8a5530"/><stop offset=".55" stop-color="#4a2a14"/><stop offset="1" stop-color="#24120a"/></radialGradient>
+      <radialGradient id="g-red" cx=".35" cy=".3" r=".8"><stop offset="0" stop-color="#e2604a"/><stop offset=".6" stop-color="#ac2a26"/><stop offset="1" stop-color="#6e1414"/></radialGradient>
+      <radialGradient id="g-green" cx=".35" cy=".3" r=".8"><stop offset="0" stop-color="#b3c063"/><stop offset="1" stop-color="#66802e"/></radialGradient>
+      <radialGradient id="g-brew" cx=".4" cy=".35" r=".75"><stop offset="0" stop-color="#6b3c18"/><stop offset=".7" stop-color="#2a1509"/><stop offset="1" stop-color="#150a04"/></radialGradient>
+    </defs>
+    <symbol id="bean" viewBox="0 0 40 28"><ellipse cx="20" cy="14" rx="18" ry="12" fill="url(#g-bean)"/><path d="M4 17C14 8 25 21 36 11" fill="none" stroke="#160a04" stroke-width="2.4" stroke-linecap="round"/><path d="M9 7.500c5-3.5 13-4.5 19-2.5" fill="none" stroke="#c08f58" stroke-width="1.3" stroke-linecap="round" opacity=".6"/></symbol>
+    <symbol id="leaf" viewBox="0 0 120 50"><g filter="url(#wob)"><path d="M2 25C28-6 88-8 118 25 88 58 28 56 2 25z" fill="url(#g-leaf)"/><path d="M2 25C30 4 86 2 118 25 80 16 40 16 2 25z" fill="#8aa874" opacity=".35"/><path d="M2 25h116M26 25l14-12M48 25l15-16M72 25l14-15M94 25l10-9M26 25l14 12M48 25l15 16M72 25l14 15M94 25l10 9" fill="none" stroke="#173720" stroke-width="1"/></g></symbol>
+    <symbol id="branch" viewBox="0 0 300 300"><path d="M300 6C214 38 112 108 36 256" fill="none" stroke="#5a3a22" stroke-width="5" stroke-linecap="round"/><path d="M168 78l-22 26M96 172l-22 10" stroke="#5a3a22" stroke-width="3" stroke-linecap="round"/>
+      <use href="#leaf" width="160" height="66" transform="translate(150 4) rotate(30)"/><use href="#leaf" width="180" height="75" transform="translate(30 58) rotate(-24)"/>
+      <use href="#leaf" width="160" height="66" transform="translate(98 150) rotate(44)"/><use href="#leaf" width="140" height="58" transform="translate(-4 196) rotate(-54)"/>
+      <g stroke="#2b1a10" stroke-width=".8"><circle cx="150" cy="96" r="12" fill="url(#g-red)"/><circle cx="170" cy="80" r="11" fill="url(#g-red)"/><circle cx="134" cy="114" r="10" fill="url(#g-green)"/><circle cx="156" cy="118" r="9" fill="url(#g-red)"/><circle cx="90" cy="176" r="11" fill="url(#g-red)"/><circle cx="74" cy="192" r="10" fill="url(#g-red)"/><circle cx="98" cy="196" r="8" fill="url(#g-green)"/></g></symbol>
+  </svg>
   <main class="mp">
-    <header class="mp-head">
-      <span class="brand"><img src="icons/logo-tile.png" alt="" width="64" height="64"><span class="wordmark"><b>Pourology</b><small>COFFEE LAB</small></span></span>
-      <span class="city">AHMEDABAD</span>
-    </header>
-    <h1 class="tagline">Worth the wait.</h1>
     <div id="install-top"></div>
+    <div class="poster">
+      <svg class="deco branch tl" viewBox="0 0 300 300" aria-hidden="true"><use href="#branch"/></svg>
+      <svg class="deco branch tl2 wide-only" viewBox="0 0 300 300" aria-hidden="true"><use href="#branch"/></svg>
+      <svg class="deco leaf1" viewBox="0 0 120 50" aria-hidden="true"><use href="#leaf"/></svg>
+      <svg class="deco leaf2 wide-only" viewBox="0 0 120 50" aria-hidden="true"><use href="#leaf"/></svg>
+      <svg class="deco leaf3 wide-only" viewBox="0 0 120 50" aria-hidden="true"><use href="#leaf"/></svg>
+      <svg class="deco branch br wide-only" viewBox="0 0 300 300" aria-hidden="true"><use href="#branch"/></svg>
+      <svg class="deco cherries wide-only" viewBox="0 0 80 60" aria-hidden="true"><ellipse cx="40" cy="50" rx="38" ry="7" fill="#b08650" opacity=".4" filter="url(#wash)"/><g stroke="#2b1a10" stroke-width=".8"><circle cx="22" cy="30" r="11" fill="url(#g-red)"/><circle cx="42" cy="22" r="12" fill="url(#g-red)"/><circle cx="40" cy="42" r="10" fill="url(#g-red)"/><circle cx="60" cy="36" r="10" fill="url(#g-green)"/></g></svg>
+      <svg class="deco cup wide-only" viewBox="0 0 120 120" aria-hidden="true"><ellipse cx="62" cy="66" rx="58" ry="52" fill="#b08650" opacity=".3" filter="url(#wash)"/><circle cx="60" cy="60" r="54" fill="#e6d3ad" stroke="#2b1a10" stroke-width="1"/><circle cx="60" cy="60" r="47" fill="#f6ecd6" stroke="#b9a37a" stroke-width="1"/><circle cx="60" cy="60" r="41" fill="url(#g-brew)"/><path d="M30 46c8-12 22-18 36-16" fill="none" stroke="#c08f58" stroke-width="3" stroke-linecap="round" opacity=".55"/><g fill="#8a5a2e" opacity=".8"><circle cx="16" cy="104" r="1.5"/><circle cx="8" cy="92" r="1"/><circle cx="26" cy="112" r="1.2"/></g></svg>
+      <div class="deco jot n1 wide-only" aria-hidden="true">Different<br>Methods<br>Same Curiosity<br>Better Coffee<svg viewBox="0 0 34 26"><path d="M30 3C26 14 16 20 5 20M5 20l8-6M5 20l9 4" fill="none" stroke="#2b1a10" stroke-width="1.4" stroke-linecap="round"/></svg></div>
+      <div class="deco jot n2 wide-only" aria-hidden="true">GOOD<br>COFFEE<br>BETTER<br>DAYS<svg viewBox="0 0 90 10"><path d="M3 7C30 3 60 2 88 4" fill="none" stroke="#2b1a10" stroke-width="1.6" stroke-linecap="round"/></svg></div>
+      <div class="deco jot n3 wide-only" aria-hidden="true">Brewing is a<br>Science and<br>a little bit of Art.<svg viewBox="0 0 34 30"><path d="M8 2C2 12 8 22 28 24M28 24l-8-6M28 24l-9 4" fill="none" stroke="#2b1a10" stroke-width="1.4" stroke-linecap="round"/></svg></div>
+      <svg class="deco bean b1" viewBox="0 0 40 28" aria-hidden="true"><use href="#bean"/></svg>
+      <svg class="deco bean b2" viewBox="0 0 40 28" aria-hidden="true"><use href="#bean"/></svg>
+      <svg class="deco bean b3" viewBox="0 0 40 28" aria-hidden="true"><use href="#bean"/></svg>
+      <svg class="deco bean b4" viewBox="0 0 40 28" aria-hidden="true"><use href="#bean"/></svg>
+      <svg class="deco bean b5 wide-only" viewBox="0 0 40 28" aria-hidden="true"><use href="#bean"/></svg>
+      <svg class="deco bean b6 wide-only" viewBox="0 0 40 28" aria-hidden="true"><use href="#bean"/></svg>
+      <svg class="deco bean b7 wide-only" viewBox="0 0 40 28" aria-hidden="true"><use href="#bean"/></svg>
+      <svg class="deco bean b8 wide-only" viewBox="0 0 40 28" aria-hidden="true"><use href="#bean"/></svg>
+      <svg class="deco bean b9 wide-only" viewBox="0 0 40 28" aria-hidden="true"><use href="#bean"/></svg>
+      <svg class="deco bean b10 wide-only" viewBox="0 0 40 28" aria-hidden="true"><use href="#bean"/></svg>
+      <svg class="deco bean b11 wide-only" viewBox="0 0 40 28" aria-hidden="true"><use href="#bean"/></svg>
+      <svg class="deco bean b12 wide-only" viewBox="0 0 40 28" aria-hidden="true"><use href="#bean"/></svg>
+      <header class="hero">
+        <span class="tile" aria-hidden="true"><i>1:16</i><b>Po</b><small>POUROLOGY</small></span>
+        <div class="title"><h1>Pourology</h1><small>COFFEE LAB</small><em>Worth the wait.</em></div>
+      </header>
+      <p class="hero-note" aria-hidden="true">Different methods. Same curiosity. Better coffee.</p>
+      <div class="ourmenu"><b>OUR MENU</b><small>SAME BEANS. DIFFERENT EQUATIONS.</small></div>
+      <div id="notice"></div>
+      <div id="menu"><div class="loading"><span class="spinner"></span>Loading menu…</div></div>
+      <div id="foot"></div>
+    </div>
     <nav class="actionbar" id="actionbar" aria-label="Contact Pourology" hidden></nav>
-    <div id="findus"></div>
-    <div id="menu"><div class="loading"><span class="spinner"></span>Loading menu…</div></div>
-    <div id="delivery"></div>
-    <div id="install"></div>
-    <p class="mp-foot">Pay by UPI or cash at the counter</p>
+    <div class="extras">
+      <div id="findus"></div>
+      <div id="delivery"></div>
+      <div id="install"></div>
+      <p class="mp-foot">Pay by UPI or cash at the counter</p>
+    </div>
   </main>
   <script type="module" src="menu.js"></script>
 </body>

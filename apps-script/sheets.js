@@ -25,6 +25,8 @@ const SCHEMA = {
   PARTNER_DISTRIBUTIONS: ['distribution_id', 'period_start', 'period_end', 'partner_id', 'ownership_percentage',
     'distributable_profit', 'calculated_share', 'paid_amount', 'remaining_amount', 'status', 'created_at', 'created_by'],
   PARTNER_WITHDRAWALS: ['withdrawal_id', 'partner_id', 'amount', 'date', 'reason', 'entered_by', 'created_at', 'status'],
+  // Setup items the investors paid for before opening. Tracked only: not part of profit.
+  INVESTMENTS: ['investment_id', 'date', 'item', 'qty', 'amount', 'paid_by', 'notes', 'entered_by', 'created_at', 'status'],
 };
 
 const DATE_COLS = { date: 1, effective_from: 1, effective_to: 1, period_start: 1, period_end: 1 };
@@ -35,8 +37,23 @@ function ss_() {
 }
 
 function sheet_(name) {
-  const sh = ss_().getSheetByName(name);
-  if (!sh) throw new Error('Missing sheet "' + name + '". Run setupSheets() once.');
+  const ss = ss_();
+  const sh = ss.getSheetByName(name);
+  if (sh) return sh;
+  // Tabs added in later versions (e.g. INVESTMENTS) are created on first use, so the live sheet
+  // never needs setupSheets() re-run. Existing tabs and rows are never touched.
+  if (!SCHEMA[name]) throw new Error('Missing sheet "' + name + '". Run setupSheets() once.');
+  return createSheet_(ss, name);
+}
+
+function createSheet_(ss, name) {
+  const cols = SCHEMA[name];
+  const sh = ss.insertSheet(name);
+  sh.getRange(1, 1, 1, cols.length).setValues([cols]).setFontWeight('bold');
+  sh.setFrozenRows(1);
+  cols.forEach((c, j) => {
+    if (DATE_COLS[c] || /_id$/.test(c) || c === 'paid_by') sh.getRange(2, j + 1, sh.getMaxRows() - 1, 1).setNumberFormat('@');
+  });
   return sh;
 }
 

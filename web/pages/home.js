@@ -7,8 +7,8 @@ export async function render(root, { user, call }) {
   try { d = await call('getMyShare'); } catch (e) { root.innerHTML = errorBox(e); return; }
 
   // Everyone with financial access also runs the stall (Quick Sale, Open/Close stall, purchases, inventory).
-  const links = [['sale', 'Quick Sale / Open–Close Stall'], ['purchases', 'Purchases'], ['inventory', 'Inventory'], ['sales', 'Sales history'],
-    ['earnings', 'Business revenue & profit'], ['audit', 'Audit']].concat(user.role === 'ADMIN' ? [['settings', 'Admin settings']] : []);
+  const links = [['sale', 'Quick Sale / Open–Close Stall'], ['purchases', 'Add purchase'], ['expenses', 'Add expense'], ['investment', 'Investment'],
+    ['earnings', 'Partner earnings'], ['withdrawals', 'Withdrawals'], ['sales', 'Sales history']].concat(user.role === 'ADMIN' ? [['settings', 'Admin settings']] : []);
 
   const share = d.partner ? `
     <section class="card">
@@ -22,6 +22,7 @@ export async function render(root, { user, call }) {
         ${stat('Total earned', inr(d.total_earned))}
         ${stat('Paid / withdrawn', inr(d.paid))}
         ${stat('Remaining payable', inr(d.remaining), '', 'hl')}
+        ${d.invested ? stat('My investment', inr(d.invested)) : ''}
       </div>
       ${DISCLAIMER_HTML(d.disclaimer)}
     </section>` : `<section class="card"><h1>Business overview</h1><p class="muted">Your account is not linked to a partner, so no personal share is shown.</p></section>`;

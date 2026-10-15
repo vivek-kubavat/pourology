@@ -13,11 +13,12 @@ Pourology Coffee Lab (Ahmedabad) app for partners Vivek, Akash and Ishan. It cov
 
 ## How profit sharing works
 
-- **Distributable profit = Revenue − COGS − Other expenses.** Only expense categories the partners mark as distributable count (Settings → Expense rules). Unrecorded expenses are never assumed.
-- **COGS** comes from each sale's recipe cost, snapshotted at the moment of sale. Stock purchases are *not* subtracted directly; they reach profit through COGS when coffee is sold, so nothing is counted twice.
-- **Partner share = distributable profit × the ownership % in effect on each day.** Ownership history uses effective dates and is never overwritten, so a change on 1 Jan only affects profit from 1 Jan onwards.
-- **Earned, paid and remaining** are separate. Withdrawals are recorded and audited, and remaining = earned − paid. The report applies withdrawals to the oldest period first to give each period a Pending / Partially paid / Paid status.
-- **Nothing is typed in or stored as a total.** Every figure is recalculated from `SALES`, `EXPENSES`, `PARTNER_OWNERSHIP_HISTORY` and `PARTNER_WITHDRAWALS`. "Close period" writes a `PARTNER_DISTRIBUTIONS` snapshot for the record only.
+- **Investment** (page *Investment*): setup items the partners paid for before opening (moka pot, V60, kettle, table…), each with its price and who paid. It is **tracked only**: it shows how much each partner put in, but it is not taken out of profit.
+- **Purchases** (page *Purchases*): anything bought from business income after opening (milk, beans, cups, ice…), with item, quantity and price. Optionally "add to stock" to track it in Inventory.
+- **Expenses** (page *Expenses*): rent, transport, electricity and other running costs. Every category counts.
+- **Profit = Sales − Purchases − Expenses**, split by ownership in effect on each day: Vivek 20%, Akash 20% (investors), Ishan 60% (coffee). Ownership history uses effective dates and is never overwritten.
+- **Earned, withdrawn and remaining** are separate. Withdrawals are recorded and audited, and remaining = earned − withdrawn. The report applies withdrawals to the oldest period first to give each period a Pending / Partially paid / Paid status.
+- **Nothing is typed in or stored as a total.** Every figure is recalculated from `SALES`, `PURCHASES`, `EXPENSES`, `PARTNER_OWNERSHIP_HISTORY` and `PARTNER_WITHDRAWALS`. "Close period" writes a `PARTNER_DISTRIBUTIONS` snapshot for the record only.
 - Every share shows its calculation, e.g. `₹80,000.00 × 20% = ₹16,000.00`.
 - All figures are labelled **Estimated / Internal Profit Share**. This app is not accounting, GST or tax software.
 
@@ -62,6 +63,7 @@ See **[DEPLOYMENT.md](DEPLOYMENT.md)** for the step-by-step guide (Google Sheet 
 apps-script/
   financeCore.js   pure profit/ownership/withdrawal maths (shared with tests)
   partners.js      P&L, partner earnings, report, withdrawals, ownership, period close
+  investments.js   setup items paid by partners (INVESTMENTS tab, created automatically)
   ops.js           menu, recipes, quick sale, stall, purchases, expenses, inventory, users
   auth.js          Google ID-token verification + roles
   Code.js          API router (role per action), sheets.js data layer, audit.js, setup.js

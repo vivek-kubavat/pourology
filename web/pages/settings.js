@@ -1,12 +1,12 @@
 import { $, $$, esc, inr, fmtDate, todayYmd, errorBox, loading, onSubmit, toast, statusPill, rerender } from '../ui.js';
 
-// Admin settings: ownership (§79–80), expense rules (§86), period close (§77), menu/recipes, users.
+// Admin settings: ownership (§79–80), expense categories, period close (§77), menu/recipes, users.
 // Partners get a read-only view of ownership and closed periods.
 const TABS = [
   ['ownership', 'Partners & ownership', ['ADMIN', 'PARTNER']],
   ['periods', 'Closed periods', ['ADMIN', 'PARTNER']],
   ['qr', 'Menu QR', ['ADMIN', 'PARTNER']],
-  ['expenses', 'Expense rules', ['ADMIN']],
+  ['expenses', 'Expense categories', ['ADMIN']],
   ['menu', 'Menu & recipes', ['ADMIN']],
   ['users', 'Users', ['ADMIN']],
 ];
@@ -141,30 +141,28 @@ async function expenses(root, ctx) {
   root.innerHTML = `
     <section class="card">
       <h2>Expense categories</h2>
-      <p class="muted small">Partners decide which recorded expenses reduce distributable profit. Unticked categories are still recorded but not subtracted.</p>
+      <p class="muted small">Categories shown when recording an expense. Every recorded expense is taken out of profit.</p>
       <form id="xform">
-        <div id="cats">${d.categories.map((c) => catRow(c, d.distributable.includes(c))).join('')}</div>
+        <div id="cats">${d.categories.map((c) => catRow(c)).join('')}</div>
         <div class="row" style="margin-top:12px"><input id="newcat" placeholder="New category" maxlength="40" style="max-width:240px"><button type="button" class="btn ghost" id="addcat">Add</button></div>
-        <div class="row" style="margin-top:12px"><button class="btn" type="submit">Save expense rules</button></div>
+        <div class="row" style="margin-top:12px"><button class="btn" type="submit">Save categories</button></div>
       </form>
     </section>`;
   $('#addcat', root).onclick = () => {
     const v = $('#newcat', root).value.trim().replace(/,/g, ' ');
     if (!v) return;
-    $('#cats', root).insertAdjacentHTML('beforeend', catRow(v, true));
+    $('#cats', root).insertAdjacentHTML('beforeend', catRow(v));
     $('#newcat', root).value = '';
   };
   root.addEventListener('click', (e) => { if (e.target.dataset.rm !== undefined) e.target.closest('.cart-line').remove(); });
   onSubmit($('#xform', root), async () => {
     const lines = $$('#cats .cart-line', root);
     const categories = lines.map((l) => l.dataset.cat);
-    const distributable = lines.filter((l) => $('input', l).checked).map((l) => l.dataset.cat);
-    if (!confirm(`Distributable categories will be: ${distributable.join(', ') || 'none'}.\nThis changes partner profit calculations for all periods. Continue?`)) return;
-    await ctx.call('setExpenseRules', { categories, distributable });
-    toast('Expense rules saved');
+    await ctx.call('setExpenseRules', { categories });
+    toast('Expense categories saved');
   });
 }
-const catRow = (c, on) => `<div class="cart-line" data-cat="${esc(c)}"><label class="row" style="color:var(--text)"><input type="checkbox" ${on ? 'checked' : ''} style="width:auto"> ${esc(c)}</label><button type="button" class="btn ghost small" data-rm>Remove</button></div>`;
+const catRow = (c) => `<div class="cart-line" data-cat="${esc(c)}"><span>${esc(c)}</span><button type="button" class="btn ghost small" data-rm>Remove</button></div>`;
 
 async function menu(root, ctx) {
   const d = await ctx.call('getCatalog');

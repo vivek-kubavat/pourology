@@ -2,7 +2,7 @@ import { $, esc, inr, fmtDate, fmtRange, todayYmd, loading, errorBox, periodPick
 
 export async function render(root, { user, call }) {
   root.innerHTML = `
-    <div class="page-head"><h1>Other Business Expenses</h1></div>
+    <div class="page-head"><div><h1>Expenses</h1><p class="muted small">Rent, transport, electricity… paid from business income. Every expense is taken out of profit.</p></div></div>
     <section class="card" id="formcard">${loading()}</section>
     <div class="card" id="picker"></div>
     <section class="card" id="out"></section>`;
@@ -15,12 +15,9 @@ export async function render(root, { user, call }) {
     try { d = await call('listExpenses', p); } catch (e) { if (mine === seq) out.innerHTML = errorBox(e); return; }
     if (mine !== seq) return;
     if (!formReady) drawForm(d);
-    const active = d.rows.filter((r) => r.status !== 'VOID');
-    const dist = active.filter((r) => r.distributable).reduce((s, r) => s + Number(r.amount), 0);
-    const other = active.filter((r) => !r.distributable).reduce((s, r) => s + Number(r.amount), 0);
-    out.innerHTML = `<p class="muted small">${esc(fmtRange(d.range))} · distributable ${inr(dist)}${other ? ` · not distributable ${inr(other)}` : ''}</p>
-      ${d.rows.length ? `<div class="table-wrap"><table class="data"><thead><tr><th>Date</th><th>Category</th><th>Description</th><th class="num">Amount</th><th>Counts toward profit split?</th>${user.role === 'ADMIN' ? '<th></th>' : ''}</tr></thead>
-      <tbody>${d.rows.map((r) => `<tr class="${r.status === 'VOID' ? 'void' : ''}"><td>${fmtDate(r.date)}</td><td>${esc(r.category)}</td><td>${esc(r.description)}</td><td class="num">${inr(r.amount)}</td><td>${r.distributable ? 'Yes' : '<span class="muted">No</span>'}</td>${user.role === 'ADMIN' ? `<td>${r.status === 'VOID' ? '' : `<button class="btn ghost small" data-void="${esc(r.expense_id)}">Void</button>`}</td>` : ''}</tr>`).join('')}</tbody></table></div>` : '<p class="muted">No expenses in this period.</p>'}`;
+    out.innerHTML = `<p class="muted small">${esc(fmtRange(d.range))} · total ${inr(d.total)}</p>
+      ${d.rows.length ? `<div class="table-wrap"><table class="data"><thead><tr><th>Date</th><th>Category</th><th>Description</th><th class="num">Amount</th>${user.role === 'ADMIN' ? '<th></th>' : ''}</tr></thead>
+      <tbody>${d.rows.map((r) => `<tr class="${r.status === 'VOID' ? 'void' : ''}"><td>${fmtDate(r.date)}</td><td>${esc(r.category)}</td><td>${esc(r.description)}</td><td class="num">${inr(r.amount)}</td>${user.role === 'ADMIN' ? `<td>${r.status === 'VOID' ? '' : `<button class="btn ghost small" data-void="${esc(r.expense_id)}">Void</button>`}</td>` : ''}</tr>`).join('')}</tbody></table></div>` : '<p class="muted">No expenses in this period.</p>'}`;
   };
   const drawForm = (d) => {
     formReady = true;
@@ -33,7 +30,7 @@ export async function render(root, { user, call }) {
         <label>Date<input name="date" type="date" value="${todayYmd()}" max="${todayYmd()}" required></label>
         <button class="btn" type="submit">Save expense</button>
       </form>
-      <p class="muted small">Distributable categories (agreed by partners): <strong>${esc(d.distributable.join(', ') || 'none')}</strong>. ${user.role === 'ADMIN' ? 'Change in Settings → Expense rules.' : ''}</p>`;
+      ${user.role === 'ADMIN' ? '<p class="muted small">Add or rename categories in Settings → Expense categories.</p>' : ''}`;
     onSubmit($('#eform', root), async (v, form) => {
       await call('addExpense', { ...v, amount: Number(v.amount) });
       toast('Expense saved');

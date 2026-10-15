@@ -3,8 +3,8 @@ import { $, esc, inr, fmtDate, fmtRange, loading, errorBox, periodPicker, status
 // §85: Partner Profit Report with filters and CSV export.
 const COLUMNS = [
   { key: 'period', label: 'Period' }, { key: 'from', label: 'From' }, { key: 'to', label: 'To' },
-  { key: 'revenue', label: 'Revenue' }, { key: 'cogs', label: 'COGS' }, { key: 'expenses', label: 'Expenses' },
-  { key: 'distributable_profit', label: 'Distributable Profit' }, { key: 'partner', label: 'Partner' },
+  { key: 'revenue', label: 'Revenue' }, { key: 'purchases', label: 'Purchases' }, { key: 'expenses', label: 'Expenses' },
+  { key: 'distributable_profit', label: 'Profit' }, { key: 'partner', label: 'Partner' },
   { key: 'ownership', label: 'Ownership %' }, { key: 'share', label: 'Partner Share' }, { key: 'paid', label: 'Paid' },
   { key: 'remaining', label: 'Remaining' }, { label: 'Status', value: (r) => STATUS_LABEL[r.status] || r.status },
 ];
@@ -41,10 +41,10 @@ export async function render(root, { call }) {
     out.innerHTML = `
       <p class="muted small">${esc(fmtRange(data.range))} · ${esc(data.note)}</p>
       ${rows.length ? `<div class="table-wrap"><table class="data">
-        <thead><tr><th>Period</th><th>Partner</th><th class="num">Revenue</th><th class="num">COGS</th><th class="num">Expenses</th><th class="num">Distributable</th><th class="num">Own %</th><th class="num">Share</th><th class="num">Paid</th><th class="num">Remaining</th><th>Status</th></tr></thead>
+        <thead><tr><th>Period</th><th>Partner</th><th class="num">Revenue</th><th class="num">Purchases</th><th class="num">Expenses</th><th class="num">Profit</th><th class="num">Own %</th><th class="num">Share</th><th class="num">Paid</th><th class="num">Remaining</th><th>Status</th></tr></thead>
         <tbody>${rows.map((r) => `<tr>
           <td style="white-space:nowrap">${data.group_by === 'day' ? fmtDate(r.from) : `${monthLabel(r.from)}<div class="muted small">${Number(r.from.slice(8))}–${Number(r.to.slice(8))}</div>`}</td>
-          <td>${esc(r.partner)}</td><td class="num">${inr(r.revenue)}</td><td class="num">${inr(r.cogs)}</td><td class="num">${inr(r.expenses)}</td>
+          <td>${esc(r.partner)}</td><td class="num">${inr(r.revenue)}</td><td class="num">${inr(r.purchases)}</td><td class="num">${inr(r.expenses)}</td>
           <td class="num">${inr(r.distributable_profit)}</td><td class="num">${esc(r.ownership)}</td><td class="num">${inr(r.share)}</td>
           <td class="num">${inr(r.paid)}</td><td class="num">${inr(r.remaining)}</td><td>${statusPill(r.status)}</td></tr>`).join('')}
         </tbody>

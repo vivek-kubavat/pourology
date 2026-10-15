@@ -44,6 +44,9 @@ function actions_() {
     listWithdrawals:    { roles: [A, P], fn: listWithdrawals },
     getOwnership:       { roles: [A, P], fn: getOwnership },
     listDistributions:  { roles: [A, P], fn: listDistributions },
+    addInvestment:      { roles: [A, P], fn: addInvestment, write: true },
+    listInvestments:    { roles: [A, P], fn: listInvestments },
+    voidInvestment:     { roles: [A], fn: voidInvestment, write: true },
 
     // admin
     setOwnership:       { roles: [A], fn: setOwnership, write: true },
@@ -53,7 +56,7 @@ function actions_() {
     saveIngredient:     { roles: [A], fn: saveIngredient, write: true },
     saveRecipe:         { roles: [A], fn: saveRecipe, write: true },
     listUsers:          { roles: [A], fn: listUsers },
-  saveUser:           { roles: [A], fn: saveUser, write: true },
+    saveUser:           { roles: [A], fn: saveUser, write: true },
   };
 }
 
