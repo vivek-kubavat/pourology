@@ -13,7 +13,7 @@ export async function render(root, { user, call }) {
     try { d = await call('listSales', p); } catch (e) { if (mine === seq) out.innerHTML = errorBox(e); return; }
     if (mine !== seq) return;
     out.innerHTML = `
-      <div class="grid" style="margin-bottom:16px">${stat('Coffees sold', num(d.totals.cups))}${stat('Orders', num(d.totals.orders))}${d.totals.revenue === undefined ? '' : stat('Revenue', inr(d.totals.revenue), '', 'hl')}</div>
+      <div class="grid" style="margin-bottom:16px">${stat('Coffees sold', num(d.totals.cups))}${stat('Orders', num(d.totals.orders))}${d.totals.revenue === undefined ? '' : stat('Revenue', inr(d.totals.revenue), d.totals.discount ? `<div class="muted small">after ${inr(d.totals.discount)} discount</div>` : '', 'hl')}</div>
       ${d.staff_view ? '<p class="muted small">Staff accounts see today\'s sales only.</p>' : ''}
       <section class="card"><p class="muted small">${esc(fmtRange(d.range))}</p>
       ${d.rows.length ? `<div class="table-wrap"><table class="data">

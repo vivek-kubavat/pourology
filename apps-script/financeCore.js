@@ -78,8 +78,8 @@ var FinanceCore = (function () {
       if (s.status === 'VOID') return;
       var b = bucket(s.date);
       b.revenue += toPaise(s.total);
-      b.cups += Number(s.qty) || 0;
-      b.orders += 1;
+      b.cups += Number(s.qty) || 0;   // discount rows have qty 0
+      if (Number(s.qty)) b.orders += 1;
     });
     (purchases || []).forEach(function (p) {
       if (p.status === 'VOID') return;
