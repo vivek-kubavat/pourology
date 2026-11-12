@@ -3,22 +3,21 @@
 // no partner names.
 import { call } from './api.js';
 import { esc } from './ui.js';
-import { ART, addonIcon, addonRank, LINE } from './menu-art.js';
+import { ICON as ART, LINE } from './menu-art.js';
 
-// Tagline and artwork of each section, from the printed menu. Other categories get a plain section.
-const STYLE = {
-  'pour-over': 'Brewed slow.\nOne cup at a time.',
-  'moka': 'Stovetop. Strong and sweet.',
-  'filter coffee': 'A timeless classic.',
-};
-// Plain-language name printed in teal under each drink's lab name.
-const ALT = {
-  'clear solution': 'Classic Black Pour-over', 'cryo pour': 'Iced Pour-over', 'cold fusion': 'Cold Brew',
-  'covalent bond': 'Creamy Moka Latte', 'dark matter': 'Strong Black Moka', 'saturated solution': 'Spanish Moka',
-  'south indian filter coffee': 'Rich. Aromatic. Authentic.',
+// How each category of the printed menu is drawn: line icon, photo (web/img/<name>.webp with its pixel
+// size and the share of the card it takes), the small note after the heading and the tagline.
+// A category that is not listed here still shows, as a plain list card.
+const SEC = {
+  'brewed coffee': { icon: 'dripper', img: ['brewed', 590, 748], tag: 'Pure brews that reveal coffee in its truest form.', hero: true },
+  'lattes': { icon: 'cup', img: ['latte', 396, 320], note: '(Coffee + Milk)', tag: 'Smooth, balanced and made for every mood.' },
+  'mocha molecule': { icon: 'atom', img: ['mocha', 298, 452, '34%'] },
+  'cold coffee': { icon: 'straw', img: ['cold', 256, 328], tag: 'Chilled, bold and naturally energising.' },
+  'hot chocolate': { icon: 'cup', img: ['hotchoc', 510, 376, '46%'] },
+  'custom coffee': { icon: 'sliders', img: ['flask', 272, 360, '30%'] },
 };
 const key = (v) => String(v).trim().toLowerCase();
-const CACHE_KEY = 'pourology.menu.v1';
+const CACHE_KEY = 'pourology.menu.v2';
 const rupees = (n) => '₹' + Number(n).toLocaleString('en-IN');
 const $ = (s) => document.querySelector(s);
 
@@ -65,33 +64,46 @@ async function load() {
 }
 
 // ---------- menu ----------
+const photo = (img, alt) => img ? `<img class="photo" src="img/${img[0]}.webp" width="${img[1]}" height="${img[2]}" alt="${esc(alt)}" loading="lazy">` : '';
+// "Hot Latte (250 ml)" → the size is printed lighter after the name.
+const itemName = (n) => { const m = /^(.*?)\s*\(([^()]*\bml)\)$/i.exec(n); return m ? `${esc(m[1])} <small>(${esc(m[2])})</small>` : esc(n); };
+const row = (i) => `<div class="drink"><h3>${itemName(i.name)}</h3>${i.description ? `<p>${esc(i.description)}</p>` : ''}<span class="price">${rupees(i.price)}</span></div>`;
+
+function section(cat, list) {
+  const cfg = SEC[key(cat)] || {};
+  const head = `<div class="sec-head">${cfg.icon ? `<span class="ico">${ART[cfg.icon]}</span>` : ''}
+    <div><h2>${esc(cat)}${cfg.note ? `<small>${esc(cfg.note)}</small>` : ''}</h2>${cfg.tag ? `<p class="tag">${esc(cfg.tag)}</p>` : ''}</div></div>`;
+  const rows = `<div class="rows">${list.map(row).join('')}</div>`;
+  if (cfg.hero) return { kind: 'hero', html: `${head}<div class="shot">${photo(cfg.img, cat)}</div>${rows}` };
+  // One drink sold in sizes: every item is named "<Category> (<Size>, <volume>)".
+  const sized = list.length > 1 && list.map((i) => new RegExp(`^${cat.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')}\\s*\\(([^,()]+),?\\s*([^()]*)\\)$`, 'i').exec(i.name.trim()));
+  if (sized && sized.every(Boolean)) {
+    return { kind: 'sizes', html: `${head}${photo(cfg.img, cat)}
+      <div class="item"><h3>${esc(cat)}</h3>${list[0].description ? `<p>${esc(list[0].description)}</p>` : ''}</div>
+      <div class="opts">${list.map((i, n) => `<div class="opt"><b>${esc(sized[n][1].trim())}</b>${sized[n][2] ? `<span>(${esc(sized[n][2].trim())})</span>` : ''}<span class="price">${rupees(i.price)}</span></div>`).join('')}</div>` };
+  }
+  if (list.length === 1 && key(list[0].name) === key(cat)) {
+    const i = list[0];
+    return { kind: 'single', style: cfg.img && cfg.img[3] ? `--pw:${cfg.img[3]};` : '',
+      html: `<div class="txt">${head}${i.description ? `<p class="desc">${esc(i.description)}</p>` : ''}<span class="price">${rupees(i.price)}</span></div>${photo(cfg.img, cat)}` };
+  }
+  return { kind: `list${cfg.img ? ' pic' : ''}`, html: cfg.img ? `${head}<div class="body">${photo(cfg.img, cat)}${rows}</div>` : head + rows };
+}
+
 function renderMenu(items) {
   const groups = new Map();
   items.forEach((i) => { const c = i.category || 'Menu'; if (!groups.has(c)) groups.set(c, []); groups.get(c).push(i); });
-  const adds = (groups.get('Additives') || []).map((x, k) => ({ ...x, k })).sort((x, y) => addonRank(x.name) - addonRank(y.name) || x.k - y.k);
-  groups.delete('Additives');
-
-  const cats = [...groups.keys()].map(key);
-  const secs = [...groups].map(([cat, list], n) => {
-    const art = ART[key(cat)], tag = STYLE[key(cat)];
-    // On the printed menu the moka pot pours straight into the filter coffee tumbler below it.
-    const flow = cats[n] === 'moka' && cats[n + 1] === 'filter coffee' ? ' pours' : cats[n] === 'filter coffee' && cats[n - 1] === 'moka' ? ' pour' : '';
-    return `<section class="sec${art ? '' : ' noart'}${flow}">
-      ${art ? `<div class="art">${art}</div>` : ''}
-      <div class="sec-head"><h2>${esc(cat)}</h2>${tag ? `<p>${esc(tag).replace('\n', '<br>')}</p>` : ''}</div>
-      <div class="rows">${list.map((i) => `<div class="row">
-        <div class="nm"><h3>${esc(i.name)}</h3>${ALT[key(i.name)] ? `<span class="alt">${ALT[key(i.name)]}</span>` : ''}</div>
-        ${i.description ? `<p>${esc(i.description)}</p>` : ''}<span class="price">${rupees(i.price)}</span></div>`).join('')}</div>
-    </section>`;
-  }).join('');
-
-  const samePrice = adds.length && adds.every((a) => a.price === adds[0].price);
-  const addBox = adds.length ? `<section class="adds" style="--n:${adds.length}">
-    <div class="adds-h"><b>ADD<br>-ONS</b>${samePrice ? `<small>${rupees(adds[0].price)} each</small>` : ''}</div>
-    ${adds.map((a) => `<div class="add">${addonIcon(a.name)}${esc(a.name)}${samePrice ? '' : `<small>${rupees(a.price)}</small>`}</div>`).join('')}
-  </section>` : '';
-
-  $('#menu').innerHTML = secs || addBox ? secs + addBox : '<p class="muted">Menu coming soon.</p>';
+  const secs = [...groups].map(([cat, list]) => section(cat, list));
+  // On wide screens the cards sit on a 14-column grid like the poster: a list next to a single drink (8 + 6),
+  // two single drinks side by side (7 + 7), everything else full width.
+  secs.forEach((s, n) => {
+    if (s.span) return;
+    const next = secs[n + 1];
+    const narrow = (x) => x && (x.kind === 'single' || x.kind === 'list pic');
+    if (narrow(s) && next && next.kind === 'single') { s.span = s.kind === 'single' ? 7 : 8; next.span = 14 - s.span; } else s.span = 14;
+  });
+  $('#menu').innerHTML = secs.map((s) => `<section class="sec ${s.kind}" style="--span:${s.span};${s.style || ''}">${s.html}</section>`).join('')
+    || '<p class="muted">Menu coming soon.</p>';
 }
 
 // ---------- footer of the sheet: find us, WhatsApp, Porter ----------

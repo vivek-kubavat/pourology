@@ -12,6 +12,50 @@ const SEED_OWNERSHIP_START = '2026-10-01';
 
 const DEFAULT_EXPENSE_CATEGORIES = ['Electricity', 'Transport', 'Stall rent', 'Equipment', 'Maintenance', 'Marketing', 'Other'];
 
+// Recipe quantities and costs are STARTING ESTIMATES — update real grams/ml and prices in
+// Settings → Menu & recipes (or record purchases, which update cost per unit automatically).
+const SEED_INGREDIENTS = [
+  ['ING_beans', 'Coffee beans', 'g', 1.6], ['ING_beans_aa', 'AA coffee beans', 'g', 3], ['ING_milk', 'Milk', 'ml', 0.07],
+  ['ING_condensed', 'Condensed milk', 'g', 0.3], ['ING_ice', 'Ice', 'g', 0.01], ['ING_filter', 'V60 filter paper', 'pc', 2.5],
+  ['ING_cup_hot', 'Hot cup', 'pc', 4], ['ING_cup_cold', 'Cold cup', 'pc', 6], ['ING_cup_shot', 'Shot cup', 'pc', 2], ['ING_lid', 'Lid', 'pc', 1.5],
+  ['ING_dark_choc', 'Dark chocolate sauce', 'ml', 1], ['ING_white_choc', 'White chocolate sauce', 'ml', 1.2],
+  ['ING_honey', 'Honey', 'ml', 0.8], ['ING_vanilla', 'Vanilla syrup', 'ml', 0.9],
+];
+// The printed menu (brand/pourology-menu-2026.jpg), in menu order: [item_id, name, category, price, description].
+// The customer menu draws one card per category; a size in brackets after the name is shown as the size.
+const SEED_MENU = [
+  ['ITM_filter_coffee', 'South Indian Filter Coffee', 'Brewed Coffee', 60, 'A classic decoction, bold and comforting.'],
+  ['ITM_dark_matter', 'Dark Matter', 'Brewed Coffee', 90, 'A rich, intense black coffee with deep character.'],
+  ['ITM_clear_solution', 'Clear Solution (V60 – Hot)', 'Brewed Coffee', 140, 'A clean, aromatic pour-over with layered notes.'],
+  ['ITM_cryo_pour', 'Cryo Pour (V60 – Iced)', 'Brewed Coffee', 150, 'A chilled, crystal-clear brew with a bright finish.'],
+  ['ITM_aa_v60_hot', 'AA Beans V60 – Hot', 'Brewed Coffee', 180, 'A specialty single-origin brew with refined complexity.'],
+  ['ITM_aa_v60_iced', 'AA Beans V60 – Iced', 'Brewed Coffee', 190, 'The same specialty brew, served chilled and vibrant.'],
+  ['ITM_hot_latte', 'Hot Latte (250 ml)', 'Lattes', 90, 'A creamy espresso classic.'],
+  ['ITM_iced_latte', 'Iced Latte (250 ml)', 'Lattes', 100, 'A chilled and refreshing classic.'],
+  ['ITM_vanilla_equation', 'Vanilla Equation (250 ml)', 'Lattes', 140, 'A smooth latte with a hint of vanilla.'],
+  ['ITM_mocha_molecule', 'Mocha Molecule', 'Mocha Molecule', 150, 'A decadent blend of espresso, chocolate and steamed milk.'],
+  ['ITM_cold_coffee_small', 'Cold Coffee (Small, 250 ml)', 'Cold Coffee', 120, 'A classic, frothy café favourite.'],
+  ['ITM_cold_coffee_large', 'Cold Coffee (Large, 350 ml)', 'Cold Coffee', 160, 'A classic, frothy café favourite.'],
+  ['ITM_hot_chocolate', 'Hot Chocolate', 'Hot Chocolate', 200, 'Rich, creamy and comforting.'],
+  ['ITM_custom_coffee', 'Custom Coffee', 'Custom Coffee', 200, 'Design your own brew. Choose your beans, method and flavour.'],
+];
+const SEED_RECIPES = [
+  ['ITM_filter_coffee', 'ING_beans', 10], ['ITM_filter_coffee', 'ING_milk', 100], ['ITM_filter_coffee', 'ING_cup_hot', 1],
+  ['ITM_dark_matter', 'ING_beans', 18], ['ITM_dark_matter', 'ING_cup_shot', 1],
+  ['ITM_clear_solution', 'ING_beans', 15], ['ITM_clear_solution', 'ING_filter', 1], ['ITM_clear_solution', 'ING_cup_hot', 1], ['ITM_clear_solution', 'ING_lid', 1],
+  ['ITM_cryo_pour', 'ING_beans', 18], ['ITM_cryo_pour', 'ING_filter', 1], ['ITM_cryo_pour', 'ING_ice', 120], ['ITM_cryo_pour', 'ING_cup_cold', 1], ['ITM_cryo_pour', 'ING_lid', 1],
+  ['ITM_aa_v60_hot', 'ING_beans_aa', 15], ['ITM_aa_v60_hot', 'ING_filter', 1], ['ITM_aa_v60_hot', 'ING_cup_hot', 1], ['ITM_aa_v60_hot', 'ING_lid', 1],
+  ['ITM_aa_v60_iced', 'ING_beans_aa', 18], ['ITM_aa_v60_iced', 'ING_filter', 1], ['ITM_aa_v60_iced', 'ING_ice', 120], ['ITM_aa_v60_iced', 'ING_cup_cold', 1], ['ITM_aa_v60_iced', 'ING_lid', 1],
+  ['ITM_hot_latte', 'ING_beans', 18], ['ITM_hot_latte', 'ING_milk', 180], ['ITM_hot_latte', 'ING_cup_hot', 1], ['ITM_hot_latte', 'ING_lid', 1],
+  ['ITM_iced_latte', 'ING_beans', 18], ['ITM_iced_latte', 'ING_milk', 150], ['ITM_iced_latte', 'ING_ice', 100], ['ITM_iced_latte', 'ING_cup_cold', 1], ['ITM_iced_latte', 'ING_lid', 1],
+  ['ITM_vanilla_equation', 'ING_beans', 18], ['ITM_vanilla_equation', 'ING_milk', 180], ['ITM_vanilla_equation', 'ING_vanilla', 15], ['ITM_vanilla_equation', 'ING_cup_hot', 1], ['ITM_vanilla_equation', 'ING_lid', 1],
+  ['ITM_mocha_molecule', 'ING_beans', 18], ['ITM_mocha_molecule', 'ING_milk', 160], ['ITM_mocha_molecule', 'ING_dark_choc', 25], ['ITM_mocha_molecule', 'ING_cup_hot', 1], ['ITM_mocha_molecule', 'ING_lid', 1],
+  ['ITM_cold_coffee_small', 'ING_beans', 18], ['ITM_cold_coffee_small', 'ING_milk', 150], ['ITM_cold_coffee_small', 'ING_ice', 80], ['ITM_cold_coffee_small', 'ING_cup_cold', 1], ['ITM_cold_coffee_small', 'ING_lid', 1],
+  ['ITM_cold_coffee_large', 'ING_beans', 24], ['ITM_cold_coffee_large', 'ING_milk', 220], ['ITM_cold_coffee_large', 'ING_ice', 100], ['ITM_cold_coffee_large', 'ING_cup_cold', 1], ['ITM_cold_coffee_large', 'ING_lid', 1],
+  ['ITM_hot_chocolate', 'ING_milk', 220], ['ITM_hot_chocolate', 'ING_dark_choc', 40], ['ITM_hot_chocolate', 'ING_cup_hot', 1], ['ITM_hot_chocolate', 'ING_lid', 1],
+  ['ITM_custom_coffee', 'ING_beans', 18], ['ITM_custom_coffee', 'ING_cup_hot', 1], ['ITM_custom_coffee', 'ING_lid', 1],
+];
+
 function setupSheets() {
   if (SEED_PARTNERS.some((p) => /CHANGE_ME|example\.com/i.test(p.gmail))) {
     throw new Error('Edit SEED_PARTNERS in setup.gs first: replace every CHANGE_ME email with the partner\'s real Gmail.');
@@ -74,45 +118,49 @@ function seed_() {
   }
 
   if (!readAll_('INGREDIENTS').length) {
-    // Recipe quantities and costs are STARTING ESTIMATES — update real grams/ml and prices in
-    // Settings → Menu & recipes (or record purchases, which update cost per unit automatically).
-    const ing = [
-      ['ING_beans', 'Coffee beans', 'g', 1.6], ['ING_milk', 'Milk', 'ml', 0.07], ['ING_condensed', 'Condensed milk', 'g', 0.3],
-      ['ING_ice', 'Ice', 'g', 0.01], ['ING_filter', 'V60 filter paper', 'pc', 2.5], ['ING_cup_hot', 'Hot cup', 'pc', 4],
-      ['ING_cup_cold', 'Cold cup', 'pc', 6], ['ING_cup_shot', 'Shot cup', 'pc', 2], ['ING_lid', 'Lid', 'pc', 1.5],
-      ['ING_dark_choc', 'Dark chocolate sauce', 'ml', 1], ['ING_white_choc', 'White chocolate sauce', 'ml', 1.2],
-      ['ING_honey', 'Honey', 'ml', 0.8], ['ING_vanilla', 'Vanilla syrup', 'ml', 0.9],
-    ];
-    appendMany_('INGREDIENTS', ing.map((r) => ({
-      ingredient_id: r[0], name: r[1], unit: r[2], cost_per_unit: r[3], reorder_level: 0, status: 'ACTIVE', created_at: now,
-    })));
-    // Pourology menu ("Worth the wait.")
-    const menu = [
-      ['ITM_clear_solution', 'Clear Solution', 'Pour-over', 120, 'Hot V60 pour-over, served black. Clean and clear, nothing hidden.'],
-      ['ITM_cryo_pour', 'Cryo Pour', 'Pour-over', 140, 'Iced pour-over. Hot coffee brewed straight over ice, so it chills instantly and keeps its aroma. No milk.'],
-      ['ITM_cold_fusion', 'Cold Fusion', 'Pour-over', 140, 'Cold brew. Coffee steeped in cold water overnight. Smooth and mellow, served over ice.'],
-      ['ITM_covalent_bond', 'Covalent Bond', 'Moka', 150, 'Moka latte. Strong moka coffee with hot milk, bonded into one bold, creamy cup.'],
-      ['ITM_dark_matter', 'Dark Matter', 'Moka', 80, 'Moka shot. A small, dark, strong coffee brewed on the stove. Drink it straight, no milk.'],
-      ['ITM_saturated_solution', 'Saturated Solution', 'Moka', 170, 'Spanish moka. Moka coffee with milk and sweet condensed milk. Rich, creamy and sweet.'],
-      ['ITM_add_dark_choc', 'Dark chocolate', 'Additives', 30, ''],
-      ['ITM_add_white_choc', 'White chocolate', 'Additives', 30, ''],
-      ['ITM_add_honey', 'Honey', 'Additives', 30, ''],
-      ['ITM_add_vanilla', 'Vanilla syrup', 'Additives', 30, ''],
-    ];
-    appendMany_('MENU_ITEMS', menu.map((m, i) => ({
-      item_id: m[0], name: m[1], category: m[2], price: m[3], description: m[4], status: 'ACTIVE', sort: i + 1, created_at: now,
-    })));
-    const recipe = [
-      ['ITM_clear_solution', 'ING_beans', 15], ['ITM_clear_solution', 'ING_filter', 1], ['ITM_clear_solution', 'ING_cup_hot', 1], ['ITM_clear_solution', 'ING_lid', 1],
-      ['ITM_cryo_pour', 'ING_beans', 18], ['ITM_cryo_pour', 'ING_filter', 1], ['ITM_cryo_pour', 'ING_ice', 120], ['ITM_cryo_pour', 'ING_cup_cold', 1], ['ITM_cryo_pour', 'ING_lid', 1],
-      ['ITM_cold_fusion', 'ING_beans', 20], ['ITM_cold_fusion', 'ING_ice', 120], ['ITM_cold_fusion', 'ING_cup_cold', 1], ['ITM_cold_fusion', 'ING_lid', 1],
-      ['ITM_covalent_bond', 'ING_beans', 18], ['ITM_covalent_bond', 'ING_milk', 150], ['ITM_covalent_bond', 'ING_cup_hot', 1], ['ITM_covalent_bond', 'ING_lid', 1],
-      ['ITM_dark_matter', 'ING_beans', 18], ['ITM_dark_matter', 'ING_cup_shot', 1],
-      ['ITM_saturated_solution', 'ING_beans', 18], ['ITM_saturated_solution', 'ING_milk', 120], ['ITM_saturated_solution', 'ING_condensed', 30],
-      ['ITM_saturated_solution', 'ING_cup_hot', 1], ['ITM_saturated_solution', 'ING_lid', 1],
-      ['ITM_add_dark_choc', 'ING_dark_choc', 20], ['ITM_add_white_choc', 'ING_white_choc', 20],
-      ['ITM_add_honey', 'ING_honey', 15], ['ITM_add_vanilla', 'ING_vanilla', 15],
-    ];
-    appendMany_('RECIPES', recipe.map((r) => ({ recipe_id: newId_('RCP'), item_id: r[0], ingredient_id: r[1], qty: r[2] })));
+    appendMany_('INGREDIENTS', SEED_INGREDIENTS.map(ingredientRow_));
+    appendMany_('MENU_ITEMS', SEED_MENU.map(menuRow_));
+    appendMany_('RECIPES', SEED_RECIPES.map(recipeRow_));
   }
+}
+
+function ingredientRow_(r) {
+  return { ingredient_id: r[0], name: r[1], unit: r[2], cost_per_unit: r[3], reorder_level: 0, status: 'ACTIVE', created_at: nowIso_() };
+}
+function menuRow_(m) {
+  return { item_id: m[0], name: m[1], category: m[2], price: m[3], description: m[4], status: 'ACTIVE', sort: SEED_MENU.indexOf(m) + 1, created_at: nowIso_() };
+}
+function recipeRow_(r) { return { recipe_id: newId_('RCP'), item_id: r[0], ingredient_id: r[1], qty: r[2] }; }
+
+/**
+ * Brings a Sheet that already has a menu in line with SEED_MENU (the printed menu). Run it once from the
+ * Apps Script editor after pushing this file. Safe to re-run.
+ *  - items in SEED_MENU are added, or get the new name / category / price / description / order;
+ *  - items no longer on the menu are switched to INACTIVE (their past sales stay untouched);
+ *  - missing ingredients are added; a recipe is added only for items that have none (tuned recipes are kept).
+ */
+function updateMenu() {
+  const sys = { email: 'setup' };
+  const haveIng = {};
+  readAll_('INGREDIENTS').forEach((i) => { haveIng[i.ingredient_id] = true; });
+  appendMany_('INGREDIENTS', SEED_INGREDIENTS.filter((r) => !haveIng[r[0]]).map(ingredientRow_));
+
+  const onMenu = {};
+  SEED_MENU.forEach((m) => { onMenu[m[0]] = m; });
+  const existing = {};
+  readAll_('MENU_ITEMS').forEach((row) => {
+    existing[row.item_id] = true;
+    const m = onMenu[row.item_id];
+    if (m) update_('MENU_ITEMS', row._row, { name: m[1], category: m[2], price: m[3], description: m[4], status: 'ACTIVE', sort: SEED_MENU.indexOf(m) + 1 });
+    else if (row.status === 'ACTIVE') update_('MENU_ITEMS', row._row, { status: 'INACTIVE' });
+  });
+  appendMany_('MENU_ITEMS', SEED_MENU.filter((m) => !existing[m[0]]).map(menuRow_));
+
+  const hasRecipe = {};
+  readAll_('RECIPES').forEach((r) => { hasRecipe[r.item_id] = true; });
+  appendMany_('RECIPES', SEED_RECIPES.filter((r) => !hasRecipe[r[0]]).map(recipeRow_));
+
+  clearMenuCache_();
+  audit_(sys, 'UPDATE_MENU', 'MENU_ITEMS', '', null, SEED_MENU.map((m) => m[1] + ' ' + m[3]));
+  Logger.log('Menu updated: ' + SEED_MENU.length + ' items.');
 }

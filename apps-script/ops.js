@@ -143,10 +143,21 @@ function openSession_() {
   return readAll_('STALL_SESSIONS').find((s) => !s.closed_at) || null;
 }
 
-/** p = {lines:[{item_id, qty}], payment_mode} — one SALES row per line, sharing an order_id. */
+const DISCOUNT_ID = 'DISCOUNT';
+const MANUAL_ID = 'MANUAL';
+
+/**
+ * p = {lines:[{item_id, qty}], payment_mode, discount?, discount_note?} — one SALES row per line, sharing
+ * an order_id. A rupee discount is stored as one extra row (item_id DISCOUNT, qty 0, negative total), so
+ * sales/profit drop by the discount, coffee counts don't change, and no new sheet columns are needed.
+ * A manual amount (a price typed in at the counter, for anything not on the menu) is stored the same way:
+ * one row with item_id MANUAL, qty 1 and no ingredient cost. An order can be a manual amount on its own.
+ */
 function recordSale(user, p) {
   const lines = Array.isArray(p.lines) ? p.lines : [];
-  if (!lines.length) throw new Error('Add at least one item.');
+  const manual = p.manual === undefined || p.manual === null || p.manual === '' || Number(p.manual) === 0
+    ? 0 : round2_(num_(p.manual, 'Manual amount', { positive: true, max: 100000 }));
+  if (!lines.length && !manual) throw new Error('Add at least one item.');
   if (lines.length > 50) throw new Error('Too many lines in one order.');
   const items = {};
   readAll_('MENU_ITEMS').forEach((m) => { items[m.item_id] = m; });
@@ -168,9 +179,30 @@ function recordSale(user, p) {
       stall_session_id: session ? session.session_id : '', status: 'ACTIVE', entered_by: user.email, created_at: now,
     };
   });
+  if (manual) {
+    const what = str_(p.manual_note, 'Manual amount note').slice(0, 60);
+    rows.push({
+      sale_id: newId_('SAL'), order_id: orderId, date: date, time: time, item_id: MANUAL_ID, item_name: what ? 'Manual amount (' + what + ')' : 'Manual amount',
+      qty: 1, unit_price: manual, unit_cogs: 0, total: manual, total_cogs: 0,
+      payment_mode: ['CASH', 'UPI', 'CARD'].indexOf(p.payment_mode) >= 0 ? p.payment_mode : 'CASH',
+      stall_session_id: session ? session.session_id : '', status: 'ACTIVE', entered_by: user.email, created_at: now,
+    });
+  }
+  const subtotal = round2_(rows.reduce((s, r) => s + r.total, 0));
+  const discount = p.discount === undefined || p.discount === null || p.discount === '' || Number(p.discount) === 0
+    ? 0 : round2_(num_(p.discount, 'Discount', { positive: true }));
+  if (discount > subtotal) throw new Error('Discount (₹' + discount + ') cannot be more than the order total (₹' + subtotal + ').');
+  if (discount) {
+    const note = str_(p.discount_note, 'Discount note').slice(0, 60);
+    rows.push(Object.assign({}, rows[0], {
+      sale_id: newId_('SAL'), item_id: DISCOUNT_ID, item_name: note ? 'Discount (' + note + ')' : 'Discount',
+      qty: 0, unit_price: -discount, unit_cogs: 0, total: -discount, total_cogs: 0,
+    }));
+  }
   appendMany_('SALES', rows);
-  audit_(user, 'RECORD_SALE', 'SALES', orderId, null, { lines: rows.length, total: rows.reduce((s, r) => s + r.total, 0) });
-  return { order_id: orderId, total: round2_(rows.reduce((s, r) => s + r.total, 0)), cups: rows.reduce((s, r) => s + r.qty, 0) };
+  const total = round2_(subtotal - discount);
+  audit_(user, 'RECORD_SALE', 'SALES', orderId, null, { lines: rows.length, subtotal: subtotal, manual: manual, discount: discount, total: total });
+  return { order_id: orderId, subtotal: subtotal, manual: manual, discount: discount, total: total, cups: rows.reduce((s, r) => s + r.qty, 0) };
 }
 
 function voidSale(user, p) {
@@ -200,7 +232,10 @@ function listSales(user, p) {
     orders: new Set(active.map((r) => r.order_id)).size,
     cups: active.reduce((s, r) => s + Number(r.qty), 0),
   };
-  if (!hideCost) totals.revenue = round2_(active.reduce((s, r) => s + Number(r.total), 0));
+  if (!hideCost) {
+    totals.revenue = round2_(active.reduce((s, r) => s + Number(r.total), 0));
+    totals.discount = round2_(-active.filter((r) => r.item_id === DISCOUNT_ID).reduce((s, r) => s + Number(r.total), 0));
+  }
   return { range: range, rows: rows, totals: totals, staff_view: hideCost };
 }
 

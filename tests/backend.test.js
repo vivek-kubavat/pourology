@@ -13,6 +13,9 @@ function freshApp() {
     if (!r.ok) throw new Error(action + ': ' + r.error);
     return r.data;
   };
+  // The money tests below are written around a ₹80 drink, so they don't change whenever the menu prices do.
+  const dm = ok('getCatalog', {}, VIVEK).items.find((i) => i.name === 'Dark Matter');
+  ok('saveMenuItem', { ...dm, price: 80 }, VIVEK);
   return { app, ok };
 }
 
@@ -21,7 +24,7 @@ test('§81: public menu exposes no financial or partner data', () => {
   const r = app.call('getMenu', {});
   assert.equal(r.ok, true);
   assert.deepEqual(Object.keys(r.data[0]).sort(), ['category', 'description', 'name', 'price']);
-  assert.deepEqual(r.data.map((i) => i.name).slice(0, 3), ['Clear Solution', 'Cryo Pour', 'Cold Fusion']);
+  assert.deepEqual(r.data.map((i) => i.name).slice(0, 3), ['South Indian Filter Coffee', 'Dark Matter', 'Clear Solution (V60 – Hot)']);
   const text = JSON.stringify(r);
   for (const word of ['cogs', 'cost', 'Vivek', 'Ishan', 'ownership', 'profit']) assert.ok(!text.includes(word), word);
 });
@@ -66,6 +69,31 @@ test('end-to-end: sale − purchases − expenses → partner earnings 20/20/60 
   assert.match(e.distribution[0].trace[0], /₹400\.00 × 20% = ₹80\.00/);
   assert.match(e.disclaimer, /Estimated \/ internal/);
   assert.match(app.call('addPurchase', { total_cost: 50 }, VIVEK).error, /Item is required/);
+});
+
+test('rupee discount: stored as a DISCOUNT line, lowers sales and profit, not coffees; voids with the order', () => {
+  const { app, ok } = freshApp();
+  const darkMatter = ok('getCatalog', {}, ISHAN).items.find((i) => i.name === 'Dark Matter');
+  const r = ok('recordSale', { lines: [{ item_id: darkMatter.item_id, qty: 2 }], discount: 20, discount_note: 'regular' }, ISHAN);
+  assert.deepEqual([r.subtotal, r.discount, r.total, r.cups], [160, 20, 140, 2]);
+  const rows = app.ss.getSheetByName('SALES').rows;
+  assert.equal(rows[0].length, rows[1].length); // no new columns
+  const list = ok('listSales', { period: 'TODAY' }, VIVEK);
+  const disc = list.rows.find((x) => x.item_id === 'DISCOUNT');
+  assert.deepEqual([disc.item_name, disc.qty, disc.total, disc.order_id], ['Discount (regular)', 0, -20, r.order_id]);
+  assert.deepEqual([list.totals.revenue, list.totals.discount, list.totals.cups, list.totals.orders], [140, 20, 2, 1]);
+  const e = ok('getPartnerEarnings', { period: 'TODAY' }, VIVEK);
+  assert.deepEqual([e.business.revenue, e.business.profit, e.business.cups], [140, 140, 2]);
+
+  assert.match(app.call('recordSale', { lines: [{ item_id: darkMatter.item_id, qty: 1 }], discount: 81 }, ISHAN).error, /more than the order total/);
+  assert.match(app.call('recordSale', { lines: [{ item_id: darkMatter.item_id, qty: 1 }], discount: -5 }, ISHAN).error, /greater than 0/);
+  // staff can give a discount too; it is audited with the amount
+  ok('saveUser', { email: 'staff@gmail.com', name: 'Staff', role: 'STAFF' }, VIVEK);
+  ok('recordSale', { lines: [{ item_id: darkMatter.item_id, qty: 1 }], discount: 10 }, 'staff@gmail.com');
+  assert.ok(ok('listAudit', { entity: 'SALES' }, VIVEK).some((a) => JSON.parse(a.after_json || '{}').discount === 10));
+
+  ok('voidSale', { order_id: r.order_id, reason: 'test' }, VIVEK);
+  assert.equal(ok('getPL', { period: 'TODAY' }, VIVEK).revenue, 70);
 });
 
 test('investment is recorded per item and partner, tracked only (not subtracted from profit)', () => {
@@ -297,4 +325,45 @@ test('stall settings validation and roles', () => {
   assert.match(app.call('setContact', { phone: '', whatsapp: '', delivery_enabled: true }, ISHAN).error, /before turning on Porter/);
   assert.match(app.call('setStallLocation', { lat: 123, lng: 72 }, ISHAN).error, /too large|Invalid/);
   assert.match(app.call('setStallLocation', { lat: 23, lng: 72, accuracy: 5000 }, ISHAN).error, /accuracy is too low/);
+});
+
+test('updateMenu: brings an older Sheet in line with the printed menu without touching past sales', () => {
+  const { app, ok } = freshApp();
+  const items = app.ss.getSheetByName('MENU_ITEMS');
+  const col = (n) => items.rows[0].indexOf(n);
+  // Make the Sheet look like the old menu: an old price, one item gone and one retired item still on sale.
+  const clear = items.rows.find((r) => r[col('item_id')] === 'ITM_clear_solution');
+  clear[col('price')] = 120; clear[col('name')] = 'Clear Solution';
+  items.rows.splice(items.rows.findIndex((r) => r[col('item_id')] === 'ITM_hot_chocolate'), 1);
+  items.rows.push(items.rows[0].map((h) => ({ item_id: 'ITM_cold_fusion', name: 'Cold Fusion', category: 'Pour-over', price: 140, status: 'ACTIVE', sort: 3 })[h] ?? ''));
+  app.updateMenu();
+  app.updateMenu(); // safe to re-run
+  const menu = ok('getMenu', {});
+  assert.equal(menu.length, 14);
+  assert.deepEqual(menu.find((i) => i.name === 'Clear Solution (V60 – Hot)').price, 140);
+  assert.ok(menu.some((i) => i.name === 'Hot Chocolate' && i.price === 200));
+  assert.ok(!menu.some((i) => i.name === 'Cold Fusion'));
+  const catalog = ok('getCatalog', {}, VIVEK);
+  assert.equal(catalog.items.find((i) => i.item_id === 'ITM_cold_fusion').status, 'INACTIVE');
+  assert.equal(catalog.recipes.filter((r) => r.item_id === 'ITM_hot_chocolate').length, 4);
+  assert.equal(catalog.recipes.filter((r) => r.item_id === 'ITM_clear_solution').length, 4);
+});
+
+test('manual amount: its own MANUAL line, counts as sales with no ingredient cost, works alone or with items', () => {
+  const { app, ok } = freshApp();
+  const darkMatter = ok('getCatalog', {}, ISHAN).items.find((i) => i.name === 'Dark Matter');
+  const alone = ok('recordSale', { lines: [], manual: 250, manual_note: 'beans 100 g', payment_mode: 'UPI' }, ISHAN);
+  assert.deepEqual([alone.subtotal, alone.manual, alone.total, alone.cups], [250, 250, 250, 1]);
+  const mixed = ok('recordSale', { lines: [{ item_id: darkMatter.item_id, qty: 1 }], manual: 45.5, discount: 25.5 }, ISHAN);
+  assert.deepEqual([mixed.subtotal, mixed.manual, mixed.discount, mixed.total], [125.5, 45.5, 25.5, 100]);
+  const list = ok('listSales', { period: 'TODAY' }, VIVEK);
+  const line = list.rows.find((x) => x.order_id === alone.order_id);
+  assert.deepEqual([line.item_id, line.item_name, line.qty, line.total, line.total_cogs, line.payment_mode], ['MANUAL', 'Manual amount (beans 100 g)', 1, 250, 0, 'UPI']);
+  assert.equal(list.totals.revenue, 350);
+  assert.equal(ok('getPartnerEarnings', { period: 'TODAY' }, VIVEK).business.revenue, 350);
+  assert.match(app.call('recordSale', { lines: [] }, ISHAN).error, /at least one item/);
+  assert.match(app.call('recordSale', { lines: [], manual: -5 }, ISHAN).error, /greater than 0/);
+  assert.match(app.call('recordSale', { lines: [], manual: 100001 }, ISHAN).error, /Manual amount/);
+  ok('voidSale', { order_id: alone.order_id, reason: 'test' }, VIVEK);
+  assert.equal(ok('listSales', { period: 'TODAY' }, VIVEK).totals.revenue, 100);
 });
